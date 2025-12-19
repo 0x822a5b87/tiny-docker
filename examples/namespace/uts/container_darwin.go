@@ -1,4 +1,4 @@
-package ns
+package main
 
 import (
 	"errors"

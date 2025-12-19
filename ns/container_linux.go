@@ -7,14 +7,13 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// StartContainer Linux 下启动带 UTS Namespace 的容器
+// StartContainer start a container with UTS Namespace in linux
 func StartContainer(cmd string) error {
 	command := exec.Command(cmd)
 	command.Stdin = os.Stdin
 	command.Stdout = os.Stdout
 	command.Stderr = os.Stderr
 
-	// Linux 专属：UTS Namespace 配置
 	command.SysProcAttr = &unix.SysProcAttr{
 		Cloneflags: unix.CLONE_NEWUTS,
 	}

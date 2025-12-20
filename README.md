@@ -5,4 +5,6 @@
 
 # references
 
+- [A workshop on Linux containers: Rebuild Docker from Scratch](https://github.com/Fewbytes/rubber-docker/tree/master)
+- [Linux containers in 500 lines of code](https://blog.lizzie.io/linux-containers-in-500-loc.html)
 - [自己动手写docker](https://github.com/xianlubird/mydocker/tree/master)

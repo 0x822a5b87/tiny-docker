@@ -35,6 +35,7 @@ var runCommand = cli.Command{
 		tty := context.Bool("it")
 		cfg := conf.CgroupConfig{
 			MemoryLimit: context.String("m"),
+			CpuShares:   context.String("c"),
 		}
 		return Run(tty, cmd, cfg)
 	},

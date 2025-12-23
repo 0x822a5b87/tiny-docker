@@ -6,6 +6,7 @@ import (
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/container"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem"
+	"github.com/0x822a5b87/tiny-docker/src/subsystem/cpu"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/manager"
 	log "github.com/sirupsen/logrus"
 )
@@ -21,7 +22,10 @@ func Run(tty bool, command string, cfg conf.CgroupConfig) error {
 		return err
 	}
 	log.Println("cgroup path = ", pid)
-	setConf(cgroupManager, cfg)
+	err = setConf(cgroupManager, cfg)
+	if err != nil {
+		return err
+	}
 	err = cgroupManager.Sync()
 	if err != nil {
 		return err
@@ -34,7 +38,21 @@ func Run(tty bool, command string, cfg conf.CgroupConfig) error {
 	return nil
 }
 
-func setConf(cgroupManager *manager.CgroupManager, cfg conf.CgroupConfig) {
+func setConf(cgroupManager *manager.CgroupManager, cfg conf.CgroupConfig) error {
 	memoryLimit, _ := subsystem.SizeToBytes(cfg.MemoryLimit)
-	cgroupManager.SetMemoryMax(int(memoryLimit))
+	err := cgroupManager.SetMemoryMax(int(memoryLimit))
+	if err != nil {
+		return err
+	}
+
+	v := cpu.MaxValue{}
+	err = v.From(cfg.CpuShares)
+	if err != nil {
+		return err
+	}
+	err = cgroupManager.SetCpuMax(v.Quota, v.Period)
+	if err != nil {
+		return err
+	}
+	return nil
 }

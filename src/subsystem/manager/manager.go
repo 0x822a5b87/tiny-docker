@@ -2,6 +2,7 @@ package manager
 
 import (
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/subsystem"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/cgroup"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/cpu"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/memory"
@@ -18,33 +19,18 @@ type CgroupManager struct {
 func NewCgroupManager(pid int) (*CgroupManager, error) {
 	path := util.GenPidPath(pid)
 	fs := NewCgroupFileSystem(path, true)
-	err, data := fs.Read(constant.CgroupProcs)
-	if err != nil {
-		return nil, err
-	}
-	procsSubsystem, err := cgroup.NewProcsValueSubsystem(data)
+	procsSubsystem, err := newSubsystem[*cgroup.ProcsValueSubsystem](fs, constant.CgroupProcs)
 	if err != nil {
 		return nil, err
 	}
 	err = procsSubsystem.Set(cgroup.ProcsItem(pid))
+
+	cpuMaxSubsystem, err := newSubsystem[*cpu.MaxValueSubsystem](fs, constant.CpuMax)
 	if err != nil {
 		return nil, err
 	}
 
-	err, data = fs.Read(constant.MemoryMax)
-	if err != nil {
-		return nil, err
-	}
-	memoryMaxValueSubsystem, err := memory.NewMaxValueSubsystem(data)
-	if err != nil {
-		return nil, err
-	}
-
-	err, data = fs.Read(constant.CpuMax)
-	if err != nil {
-		return nil, err
-	}
-	cpuMaxSubsystem, err := cpu.NewCpuMaxValueSubsystem(data)
+	memoryMaxValueSubsystem, err := newSubsystem[*memory.MaxValueSubsystem](fs, constant.MemoryMax)
 	if err != nil {
 		return nil, err
 	}
@@ -97,4 +83,35 @@ func (m *CgroupManager) readCgroupProcs() (*cgroup.ProcsValue, error) {
 	v := &cgroup.ProcsValue{}
 	err = v.From(data)
 	return v, err
+}
+
+func newSubsystem[T subsystem.BaseSubsystem](fs *CgroupFileSystem, name string) (T, error) {
+	zeroSubsystem := subsystem.ZeroSubsystem{}
+	err, data := fs.Read(name)
+	if err != nil {
+		return any(zeroSubsystem).(T), err
+	}
+
+	var ns T
+
+	switch name {
+	case constant.CgroupProcs:
+		v, e := cgroup.NewProcsValueSubsystem(data)
+		err = e
+		ns = any(v).(T)
+	case constant.MemoryMax:
+		v, e := memory.NewMaxValueSubsystem(data)
+		err = e
+		ns = any(v).(T)
+	case constant.CpuMax:
+		v, e := cpu.NewCpuMaxValueSubsystem(data)
+		err = e
+		ns = any(v).(T)
+	}
+
+	if err != nil {
+		return any(zeroSubsystem).(T), err
+	}
+
+	return any(ns).(T), nil
 }

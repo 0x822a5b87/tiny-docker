@@ -1,12 +1,15 @@
 package manager
 
 import (
+	"fmt"
+
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/cgroup"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/cpu"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/memory"
 	"github.com/0x822a5b87/tiny-docker/src/util"
+	"github.com/sirupsen/logrus"
 )
 
 type CgroupManager struct {
@@ -107,9 +110,12 @@ func newSubsystem[T subsystem.BaseSubsystem](fs *CgroupFileSystem, name string) 
 		v, e := cpu.NewCpuMaxValueSubsystem(data)
 		err = e
 		ns = any(v).(T)
+	default:
+		panic(fmt.Errorf("unknown subsystem {%s}", name))
 	}
 
 	if err != nil {
+		logrus.Errorf("[newSubsystem]")
 		return any(zeroSubsystem).(T), err
 	}
 

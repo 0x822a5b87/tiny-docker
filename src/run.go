@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"os/exec"
+	"syscall"
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/container"
@@ -11,24 +13,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Run(tty bool, command string, cfg conf.CgroupConfig) error {
-	parent := container.NewParentProcess(tty, command)
-	if err := parent.Start(); err != nil {
+func Run(tty bool, commands []string, cfg conf.CgroupConfig) error {
+	parent := container.NewParentProcess(tty, commands)
+	err := initCgroup(parent, commands, cfg)
+	if err != nil {
+		return err
+	}
+	if err = parent.Start(); err != nil {
 		log.Error(err)
-	}
-	pid := parent.Process.Pid
-	cgroupManager, err := manager.NewCgroupManager(pid)
-	if err != nil {
-		return err
-	}
-	log.Println("cgroup path = ", pid)
-	err = setConf(cgroupManager, cfg)
-	if err != nil {
-		return err
-	}
-	err = cgroupManager.Sync()
-	if err != nil {
-		return err
 	}
 	err = parent.Wait()
 	if err != nil {
@@ -38,21 +30,44 @@ func Run(tty bool, command string, cfg conf.CgroupConfig) error {
 	return nil
 }
 
+func initCgroup(parent *exec.Cmd, commands []string, cfg conf.CgroupConfig) error {
+	pid := syscall.Getpid()
+	cgroupManager, err := manager.NewCgroupManager(pid)
+	if err != nil {
+		return err
+	}
+	log.Printf("cgroup pid = {%d}, command = {%s}", pid, commands)
+	err = setConf(cgroupManager, cfg)
+	if err != nil {
+		return err
+	}
+	return cgroupManager.Sync()
+}
+
 func setConf(cgroupManager *manager.CgroupManager, cfg conf.CgroupConfig) error {
-	memoryLimit, _ := subsystem.SizeToBytes(cfg.MemoryLimit)
-	err := cgroupManager.SetMemoryMax(int(memoryLimit))
+	err := setMemoryLimit(cgroupManager, cfg)
 	if err != nil {
 		return err
 	}
 
-	v := cpu.MaxValue{}
-	err = v.From(cfg.CpuShares)
+	err = setCpuShares(cgroupManager, cfg)
 	if err != nil {
 		return err
 	}
-	err = cgroupManager.SetCpuMax(v.Quota, v.Period)
-	if err != nil {
-		return err
-	}
+
 	return nil
+}
+
+func setMemoryLimit(cgroupManager *manager.CgroupManager, cfg conf.CgroupConfig) error {
+	memoryLimit, _ := subsystem.SizeToBytes(cfg.MemoryLimit)
+	return cgroupManager.SetMemoryMax(int(memoryLimit))
+}
+
+func setCpuShares(cgroupManager *manager.CgroupManager, cfg conf.CgroupConfig) error {
+	v := cpu.MaxValue{}
+	err := v.From(cfg.CpuShares)
+	if err != nil {
+		return err
+	}
+	return cgroupManager.SetCpuMax(v.Quota, v.Period)
 }

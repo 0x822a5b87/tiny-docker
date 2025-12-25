@@ -16,4 +16,5 @@ var (
 	ErrProcsEmpty       = Err{ErrorCode: 100001, ErrorText: "procs is nil or empty"}
 	ErrProcsPidNotFound = Err{ErrorCode: 100002, ErrorText: "pid not found"}
 	ErrCreateCgroup     = Err{ErrorCode: 100003, ErrorText: "error create cgroup"}
+	ErrMalformedArgs    = Err{ErrorCode: 100004, ErrorText: "malformed args"}
 )

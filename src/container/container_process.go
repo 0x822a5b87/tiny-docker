@@ -4,12 +4,16 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"golang.org/x/sys/unix"
 )
 
-func NewParentProcess(tty bool, command string) *exec.Cmd {
-	args := []string{"init", command}
-	cmd := exec.Command("/proc/self/exe", args...)
+func NewParentProcess(tty bool, commands []string) *exec.Cmd {
+	args := []string{"init"}
+	for _, command := range commands {
+		args = append(args, command)
+	}
+	cmd := exec.Command(constant.UnixProcSelfExe, args...)
 	cmd.SysProcAttr = &unix.SysProcAttr{
 		Cloneflags: unix.CLONE_NEWUTS |
 			unix.CLONE_NEWPID |
@@ -17,6 +21,7 @@ func NewParentProcess(tty bool, command string) *exec.Cmd {
 			unix.CLONE_NEWNET |
 			unix.CLONE_NEWIPC,
 		Unshareflags: unix.CLONE_NEWNS,
+		Setpgid:      true,
 	}
 
 	if tty {

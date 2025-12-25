@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/container"
+	"github.com/0x822a5b87/tiny-docker/src/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -28,16 +28,16 @@ var runCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-		if len(context.Args()) < 1 {
-			return fmt.Errorf("missing container command")
+		commands, err := util.GetCommands(context)
+		if err != nil {
+			return err
 		}
-		cmd := context.Args().Get(0)
 		tty := context.Bool("it")
 		cfg := conf.CgroupConfig{
 			MemoryLimit: context.String("m"),
 			CpuShares:   context.String("c"),
 		}
-		return Run(tty, cmd, cfg)
+		return Run(tty, commands, cfg)
 	},
 }
 
@@ -46,8 +46,10 @@ var initCommand = cli.Command{
 	Usage: `Init container process run user's process in container. Do not call it outside.`,
 	Action: func(context *cli.Context) error {
 		log.Infof("init come on pid : %d", os.Getpid())
-		cmd := context.Args().Get(0)
-		err := container.RunContainerInitProcess(cmd, nil)
-		return err
+		args, err := util.GetCommands(context)
+		if err != nil {
+			return err
+		}
+		return container.RunContainerInitProcess(args[0], args)
 	},
 }

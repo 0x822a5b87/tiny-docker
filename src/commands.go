@@ -10,6 +10,13 @@ import (
 	"github.com/urfave/cli"
 )
 
+type RunCommands struct {
+	Tty      bool
+	Commands []string
+	Cfg      conf.CgroupConfig
+	UserEnv  []string
+}
+
 var runCommand = cli.Command{
 	Name:  "run",
 	Usage: `Create a container with namespace and cgroups limit tiny-docker run -it [command]`,
@@ -26,18 +33,26 @@ var runCommand = cli.Command{
 			Name:  "c",
 			Usage: "cpu share limit",
 		},
+
+		&cli.StringSliceFlag{
+			Name:  "env,e",
+			Usage: "Set environment variables, format: `KEY=VALUE`",
+		},
 	},
 	Action: func(context *cli.Context) error {
 		commands, err := util.GetCommands(context)
 		if err != nil {
 			return err
 		}
-		tty := context.Bool("it")
-		cfg := conf.CgroupConfig{
+		runCommands := RunCommands{}
+		runCommands.Tty = context.Bool("it")
+		runCommands.Cfg = conf.CgroupConfig{
 			MemoryLimit: context.String("m"),
 			CpuShares:   context.String("c"),
 		}
-		return Run(tty, commands, cfg)
+		runCommands.UserEnv = context.StringSlice("env")
+		runCommands.Commands = commands
+		return Run(runCommands)
 	},
 }
 

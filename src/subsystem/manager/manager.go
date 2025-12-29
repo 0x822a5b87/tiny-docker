@@ -61,12 +61,7 @@ func (m *CgroupManager) DelProcsPid(pid cgroup.ProcsItem) error {
 }
 
 func (m *CgroupManager) Sync() error {
-	err := Write(m.fs, m.procsSubsystem)
-	if err != nil {
-		return err
-	}
-
-	err = Write(m.fs, m.cpuMaxSubsystem)
+	err := Write(m.fs, m.cpuMaxSubsystem)
 	if err != nil {
 		return err
 	}
@@ -75,6 +70,12 @@ func (m *CgroupManager) Sync() error {
 	if err != nil {
 		return err
 	}
+
+	err = Write(m.fs, m.procsSubsystem)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

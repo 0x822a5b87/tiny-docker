@@ -13,9 +13,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func Run(tty bool, commands []string, cfg conf.CgroupConfig) error {
-	parent := container.NewParentProcess(tty, commands)
-	err := initCgroup(parent, commands, cfg)
+func Run(commands RunCommands) error {
+	parent := container.NewParentProcess(commands.Tty, commands.Commands, commands.UserEnv)
+	err := initCgroup(parent, commands.Commands, commands.Cfg)
 	if err != nil {
 		return err
 	}

@@ -11,10 +11,11 @@ import (
 )
 
 type RunCommands struct {
-	Tty      bool
-	Commands []string
-	Cfg      conf.CgroupConfig
-	UserEnv  []string
+	Tty     bool
+	Image   string
+	Args    []string
+	Cfg     conf.CgroupConfig
+	UserEnv []string
 }
 
 var runCommand = cli.Command{
@@ -33,25 +34,30 @@ var runCommand = cli.Command{
 			Name:  "c",
 			Usage: "cpu share limit",
 		},
-
+		cli.StringFlag{
+			Name:  "entrypoint",
+			Usage: "Overwrite the default ENTRYPOINT of the image",
+		},
 		&cli.StringSliceFlag{
 			Name:  "env,e",
 			Usage: "Set environment variables, format: `KEY=VALUE`",
 		},
 	},
 	Action: func(context *cli.Context) error {
-		commands, err := util.GetCommands(context)
+		image, args, err := util.GetImageAndArgs(context)
 		if err != nil {
+			log.Error(err, "error parse image and args")
 			return err
 		}
 		runCommands := RunCommands{}
 		runCommands.Tty = context.Bool("it")
+		runCommands.Image = image
+		runCommands.Args = args
 		runCommands.Cfg = conf.CgroupConfig{
 			MemoryLimit: context.String("m"),
 			CpuShares:   context.String("c"),
 		}
 		runCommands.UserEnv = context.StringSlice("env")
-		runCommands.Commands = commands
 		return Run(runCommands)
 	},
 }
@@ -61,7 +67,7 @@ var initCommand = cli.Command{
 	Usage: `Init container process run user's process in container. Do not call it outside.`,
 	Action: func(context *cli.Context) error {
 		log.Infof("init come on pid : %d", os.Getpid())
-		args, err := util.GetCommands(context)
+		args, err := util.GetArgs(context)
 		if err != nil {
 			return err
 		}

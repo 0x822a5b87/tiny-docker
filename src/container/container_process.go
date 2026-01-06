@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
@@ -30,7 +31,7 @@ func NewParentProcess(tty bool, commands []string, env []string) *exec.Cmd {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 	}
-	cmd.Dir = constant.DefaultPwd
+	cmd.Dir = conf.GlobalConfig.MergePath()
 	cmd.Env = env
 	return cmd
 }

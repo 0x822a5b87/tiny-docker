@@ -6,42 +6,95 @@ import (
 	"syscall"
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
+	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/container"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/cpu"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/manager"
-	log "github.com/sirupsen/logrus"
+	"github.com/0x822a5b87/tiny-docker/src/util"
+	"github.com/sirupsen/logrus"
 )
 
 func Run(commands RunCommands) error {
-	parent := container.NewParentProcess(commands.Tty, commands.Commands, commands.UserEnv)
-	err := initCgroup(parent, commands.Commands, commands.Cfg)
-	if err != nil {
+	logrus.Infof("init config : %v", conf.GlobalConfig)
+	conf.LoadConfig()
+	var err error
+	if err = setupFs(commands.Image); err != nil {
+		logrus.Error(err, "error setup fs.")
+		return err
+	}
+	parent := container.NewParentProcess(commands.Tty, commands.Args, commands.UserEnv)
+	setupEnv(parent)
+	if err = setupCgroup(commands.Args, commands.Cfg); err != nil {
 		return err
 	}
 	if err = parent.Start(); err != nil {
-		log.Error(err)
+		logrus.Error(err, "error start process.")
+		return err
 	}
-	err = parent.Wait()
-	if err != nil {
+	if err = parent.Wait(); err != nil {
+		logrus.Error("error wait process:", err)
 		return err
 	}
 	os.Exit(-1)
 	return nil
 }
 
-func initCgroup(parent *exec.Cmd, commands []string, cfg conf.CgroupConfig) error {
+func setupEnv(cmd *exec.Cmd) {
+	util.AppendEnv(cmd, constant.MetaName, conf.GlobalConfig.Meta.Name)
+	util.AppendEnv(cmd, constant.FsBasePath, conf.GlobalConfig.Fs.Root)
+
+	util.AppendEnv(cmd, constant.FsReadLayerPath, conf.GlobalConfig.ReadPath())
+	util.AppendEnv(cmd, constant.FsWriteLayerPath, conf.GlobalConfig.WritePath())
+	util.AppendEnv(cmd, constant.FsWorkLayerPath, conf.GlobalConfig.WorkPath())
+	util.AppendEnv(cmd, constant.FsMergeLayerPath, conf.GlobalConfig.MergePath())
+}
+
+func setupCgroup(commands []string, cfg conf.CgroupConfig) error {
 	pid := syscall.Getpid()
 	cgroupManager, err := manager.NewCgroupManager(pid)
 	if err != nil {
 		return err
 	}
-	log.Printf("cgroup pid = {%d}, command = {%s}", pid, commands)
+	logrus.Printf("cgroup pid = {%d}, command = {%s}", pid, commands)
 	err = setConf(cgroupManager, cfg)
 	if err != nil {
 		return err
 	}
 	return cgroupManager.Sync()
+}
+
+// init union fs for layer
+func setupFs(image string) error {
+	readPath := conf.GlobalConfig.ReadPath()
+	writePath := conf.GlobalConfig.WritePath()
+	workPath := conf.GlobalConfig.WorkPath()
+	mergePath := conf.GlobalConfig.MergePath()
+
+	var err error
+	if err = util.EnsureDirectoryExists(readPath); err != nil {
+		logrus.Errorf("ensure directory error : %s", err.Error())
+		return err
+	}
+	if err = util.EnsureDirectoryExists(writePath); err != nil {
+		logrus.Errorf("ensure directory error : %s", err.Error())
+		return err
+	}
+	if err = util.EnsureDirectoryExists(workPath); err != nil {
+		logrus.Errorf("ensure directory error : %s", err.Error())
+		return err
+	}
+	if err = util.EnsureDirectoryExists(mergePath); err != nil {
+		logrus.Errorf("ensure directory error : %s", err.Error())
+		return err
+	}
+
+	if err = util.UnTar(image, readPath); err != nil {
+		logrus.Errorf("untar image error : %s", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func setConf(cgroupManager *manager.CgroupManager, cfg conf.CgroupConfig) error {

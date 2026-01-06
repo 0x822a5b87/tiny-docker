@@ -5,7 +5,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func GetCommands(context *cli.Context) ([]string, error) {
+func GetArgs(context *cli.Context) ([]string, error) {
 	commands := make([]string, 0)
 	if len(context.Args()) < 1 {
 		return commands, constant.ErrMalformedArgs
@@ -17,16 +17,16 @@ func GetCommands(context *cli.Context) ([]string, error) {
 	return commands, nil
 }
 
-func GetCommandAndArgs(context *cli.Context) (string, []string, error) {
+func GetImageAndArgs(context *cli.Context) (string, []string, error) {
 	commands := make([]string, 0)
-	var command string
-	if context.NArg() < 1 {
-		return command, commands, constant.ErrMalformedArgs
+	if len(context.Args()) < 1 {
+		return "", commands, constant.ErrMalformedArgs
 	}
 
-	command = context.Args().First()
+	image := context.Args().First()
 	for i := 1; i < context.NArg(); i++ {
 		commands = append(commands, context.Args().Get(i))
 	}
-	return command, commands, nil
+
+	return image, commands, nil
 }

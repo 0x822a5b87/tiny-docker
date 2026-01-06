@@ -7,13 +7,18 @@ import (
 	"syscall"
 
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
 
 func RunContainerInitProcess(command string, args []string) error {
 	logrus.Infof("init process command: {%s}, args: {%v}", command, args)
-	err := setUpMount()
-	if err != nil {
+	var err error
+	if err = setupUnionFs(); err != nil {
+		return err
+	}
+	logrus.Info("setup layer success.")
+	if err = setupMount(); err != nil {
 		return err
 	}
 	logrus.Info("setup mount success.")
@@ -21,7 +26,7 @@ func RunContainerInitProcess(command string, args []string) error {
 	if err != nil {
 		return err
 	}
-	logrus.Printf("running command {%s} with args {%s}", path, args)
+	logrus.Infof("running command {%s} with args {%s}", path, args)
 	if err = syscall.Exec(path, args, os.Environ()); err != nil {
 		logrus.Errorf("exec error : %s", err.Error())
 	}
@@ -62,7 +67,21 @@ func pivotRoot(root string) error {
 	return os.Remove(pivotDir)
 }
 
-func setUpMount() error {
+// init read-layer, write-layer, work-layer, merge-layer for container
+func setupUnionFs() error {
+	readPath := util.GetEnv(constant.FsReadLayerPath)
+	writePath := util.GetEnv(constant.FsWriteLayerPath)
+	workPath := util.GetEnv(constant.FsWorkLayerPath)
+	mergePath := util.GetEnv(constant.FsMergeLayerPath)
+	// mount -t overlay overlay -o lowerdir=...,upperdir=...,workdir=... /root/tiny-docker/busybox/merged
+	if err := util.MountOverlayFS(readPath, writePath, workPath, mergePath); err != nil {
+		logrus.Errorf("mount proc error : %s", err.Error())
+		return err
+	}
+	return nil
+}
+
+func setupMount() error {
 	pwd, err := os.Getwd()
 	if err != nil {
 		logrus.Errorf("Get current location error %v", err)
@@ -74,10 +93,11 @@ func setUpMount() error {
 		return err
 	}
 
-	//mount proc
+	// mount proc
 	defaultMountFlags := syscall.MS_NOEXEC | syscall.MS_NOSUID | syscall.MS_NODEV
 	err = syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), "")
 	if err != nil {
+		logrus.Errorf("mount proc error : %s", err.Error())
 		return err
 	}
 

@@ -1,0 +1,4 @@
+meta:
+  name: "busybox"
+fs:
+  root: "/root/tiny-docker/"

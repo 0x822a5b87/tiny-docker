@@ -42,19 +42,19 @@ func MountOverlayFS(lowerDir, upperDir, workDir, mergedDir string) error {
 
 	overlayOpts := fmt.Sprintf("lowerdir=%s,upperdir=%s,workdir=%s", lowerDir, upperDir, workDir)
 	if err := syscall.Mount("overlay", mergedDir, "overlay", 0, overlayOpts); err != nil {
-		return fmt.Errorf("mount overlayfs failed: %v (opts: %s)", err, overlayOpts)
+		return fmt.Errorf("mount overlay failed: %v (opts: %s)", err, overlayOpts)
 	}
 
-	logrus.Infof("mount overlayfs success: lower=%s, upper=%s, work=%s -> merged=%s",
+	logrus.Infof("mount overlay success: lower=%s, upper=%s, work=%s -> merged=%s",
 		lowerDir, upperDir, workDir, mergedDir)
 	return nil
 }
 
-// UnmountOverlayFS 卸载 OverlayFS（清理时用）
+// UnmountOverlayFS unmount OverlayFS
 func UnmountOverlayFS(mergedDir string) error {
 	if err := syscall.Unmount(mergedDir, syscall.MNT_DETACH); err != nil {
-		return fmt.Errorf("unmount overlayfs %s failed: %v", mergedDir, err)
+		return fmt.Errorf("unmount overlay %s failed: %v", mergedDir, err)
 	}
-	logrus.Infof("unmount overlayfs success: %s", mergedDir)
+	logrus.Infof("unmount overlay success: %s", mergedDir)
 	return nil
 }

@@ -23,9 +23,25 @@ func ExtractNameFromTarPath(tarPath string) string {
 	return filename
 }
 
-func UnTar(tarPath string, destDir string) error {
-	if _, err := exec.Command("tar", "-xvf", tarPath, "-C", destDir).CombinedOutput(); err != nil {
+func Tar(dstFile string, srcPath string) error {
+	data, err := exec.Command("tar", "-cvf", dstFile, "-C", srcPath, ".").CombinedOutput()
+	logrus.Debug(string(data))
+	if err != nil {
+		logrus.Errorf("tar error: {%s}", err.Error())
+		logrus.Errorf("tar error: dst = {%s}, src = {%s}, error = {%s}", dstFile, srcPath, err.Error())
+		logrus.Errorf("tar error info: {%s}", string(data))
+		return err
+	}
+	return nil
+}
+
+func UnTar(srcFile string, dstPath string) error {
+	data, err := exec.Command("tar", "-xvf", srcFile, "-C", dstPath).CombinedOutput()
+	logrus.Debug(string(data))
+	if err != nil {
 		logrus.Errorf("untar error: {%s}", err.Error())
+		logrus.Errorf("untar error: src = {%s}, dst = {%s}, error = {%s}", srcFile, dstPath, err.Error())
+		logrus.Errorf("untar error info: {%s}", string(data))
 		return err
 	}
 	return nil

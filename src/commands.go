@@ -55,7 +55,7 @@ var runCommand = cli.Command{
 			CpuShares:   context.String("c"),
 		}
 		runCommands.UserEnv = context.StringSlice("env")
-		return Run(runCommands)
+		return container.Run(runCommands)
 	},
 }
 
@@ -69,5 +69,32 @@ var initCommand = cli.Command{
 			return err
 		}
 		return container.RunContainerInitProcess(args[0], args)
+	},
+}
+
+var commitCommand = cli.Command{
+	Name:  "commit",
+	Usage: `Create a compression file(.tar) from a container`,
+	Flags: []cli.Flag{
+		&cli.StringSliceFlag{
+			Name:  "s",
+			Usage: "Name of container to commit",
+		},
+		&cli.StringSliceFlag{
+			Name:  "t",
+			Usage: "Target name of committed container",
+		},
+		&cli.StringSliceFlag{
+			Name:  "v",
+			Usage: "Volume of container to commit",
+		},
+	},
+	Action: func(context *cli.Context) error {
+		cmd := conf.CommitCommands{
+			SrcName: context.String("s"),
+			DstName: context.String("t"),
+			Volume:  context.String("v"),
+		}
+		return container.Commit(cmd)
 	},
 }

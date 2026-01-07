@@ -7,14 +7,13 @@ import (
 	"syscall"
 
 	"github.com/0x822a5b87/tiny-docker/src/constant"
-	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
 
 func RunContainerInitProcess(command string, args []string) error {
 	logrus.Infof("init process command: {%s}, args: {%v}", command, args)
 	var err error
-	if err = setupUnionFs(); err != nil {
+	if err = SetupUnionFsFromEnv(); err != nil {
 		return err
 	}
 	logrus.Info("setup layer success.")
@@ -65,20 +64,6 @@ func pivotRoot(root string) error {
 		return constant.ErrMountRootFS.Wrap(err)
 	}
 	return os.Remove(pivotDir)
-}
-
-// init read-layer, write-layer, work-layer, merge-layer for container
-func setupUnionFs() error {
-	readPath := util.GetEnv(constant.FsReadLayerPath)
-	writePath := util.GetEnv(constant.FsWriteLayerPath)
-	workPath := util.GetEnv(constant.FsWorkLayerPath)
-	mergePath := util.GetEnv(constant.FsMergeLayerPath)
-	// mount -t overlay overlay -o lowerdir=...,upperdir=...,workdir=... /root/tiny-docker/busybox/merged
-	if err := util.MountOverlayFS(readPath, writePath, workPath, mergePath); err != nil {
-		logrus.Errorf("mount proc error : %s", err.Error())
-		return err
-	}
-	return nil
 }
 
 func setupMount() error {

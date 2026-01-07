@@ -11,7 +11,12 @@ var GlobalConfig Config
 
 func LoadRunConfig(commands RunCommands) {
 	loadConfig()
-	GlobalConfig.RunCmd = commands
+	GlobalConfig.Cmd = commands.IntoCommands()
+}
+
+func LoadCommitConfig(cmd CommitCommands) {
+	loadConfig()
+	GlobalConfig.Cmd = cmd.IntoCommands()
 }
 
 func loadConfig() {

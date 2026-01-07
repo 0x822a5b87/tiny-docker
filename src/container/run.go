@@ -1,4 +1,4 @@
-package main
+package container
 
 import (
 	"os"
@@ -7,12 +7,12 @@ import (
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
-	"github.com/0x822a5b87/tiny-docker/src/container"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/cpu"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/manager"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sys/unix"
 )
 
 func Run(commands conf.RunCommands) error {
@@ -23,7 +23,7 @@ func Run(commands conf.RunCommands) error {
 		logrus.Error(err, "error setup fs.")
 		return err
 	}
-	parent := container.NewParentProcess(commands.Tty, commands.Args, commands.UserEnv)
+	parent := newParentProcess(commands.Tty, commands.Args, commands.UserEnv)
 	setupEnv(parent)
 	if err = setupCgroup(commands.Args, commands.Cfg); err != nil {
 		return err
@@ -123,4 +123,32 @@ func setCpuShares(cgroupManager *manager.CgroupManager, cfg conf.CgroupConfig) e
 		return err
 	}
 	return cgroupManager.SetCpuMax(v.Quota, v.Period)
+}
+
+func newParentProcess(tty bool, commands []string, env []string) *exec.Cmd {
+	args := []string{"init"}
+	for _, command := range commands {
+		args = append(args, command)
+	}
+	cmd := exec.Command(constant.UnixProcSelfExe, args...)
+	cmd.SysProcAttr = &unix.SysProcAttr{
+		Cloneflags: unix.CLONE_NEWUTS |
+			unix.CLONE_NEWPID |
+			unix.CLONE_NEWNS |
+			unix.CLONE_NEWNET |
+			unix.CLONE_NEWIPC,
+		Unshareflags: unix.CLONE_NEWNS,
+		Setctty:      tty,
+		Setsid:       tty,
+	}
+
+	if tty {
+		logrus.Info("Running new process in tty.")
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+	}
+	cmd.Dir = conf.GlobalConfig.MergePath()
+	cmd.Env = env
+	return cmd
 }

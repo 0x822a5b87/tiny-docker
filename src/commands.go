@@ -10,14 +10,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-type RunCommands struct {
-	Tty     bool
-	Image   string
-	Args    []string
-	Cfg     conf.CgroupConfig
-	UserEnv []string
-}
-
 var runCommand = cli.Command{
 	Name:  "run",
 	Usage: `Create a container with namespace and cgroups limit tiny-docker run -it [command]`,
@@ -49,7 +41,7 @@ var runCommand = cli.Command{
 			log.Error(err, "error parse image and args")
 			return err
 		}
-		runCommands := RunCommands{}
+		runCommands := conf.RunCommands{}
 		runCommands.Tty = context.Bool("it")
 		runCommands.Image = image
 		runCommands.Args = args

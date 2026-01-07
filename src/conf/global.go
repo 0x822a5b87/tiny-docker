@@ -9,7 +9,12 @@ import (
 
 var GlobalConfig Config
 
-func LoadConfig() {
+func LoadRunConfig(commands RunCommands) {
+	loadConfig()
+	GlobalConfig.RunCmd = commands
+}
+
+func loadConfig() {
 	data, err := os.ReadFile("config.yaml")
 	if err != nil {
 		logrus.Errorf("Error reading config file: %v", err)

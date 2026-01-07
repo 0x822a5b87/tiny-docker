@@ -15,9 +15,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func Run(commands RunCommands) error {
+func Run(commands conf.RunCommands) error {
 	logrus.Infof("init config : %v", conf.GlobalConfig)
-	conf.LoadConfig()
+	conf.LoadRunConfig(commands)
 	var err error
 	if err = setupFs(commands.Image); err != nil {
 		logrus.Error(err, "error setup fs.")

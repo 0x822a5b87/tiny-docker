@@ -12,6 +12,7 @@ type RunCommands struct {
 	Args    []string
 	Cfg     CgroupConfig
 	UserEnv []string
+	Volume  string
 }
 
 func (r RunCommands) ImageName() string {
@@ -38,17 +39,25 @@ type FsConfig struct {
 }
 
 func (c Config) ReadPath() string {
-	return filepath.Join(c.Fs.Root, c.RunCmd.ImageName(), "read")
+	return c.buildPath("read")
 }
 
 func (c Config) WritePath() string {
-	return filepath.Join(c.Fs.Root, c.RunCmd.ImageName(), "write")
+	return c.buildPath("write")
 }
 
 func (c Config) WorkPath() string {
-	return filepath.Join(c.Fs.Root, c.RunCmd.ImageName(), "work")
+	return c.buildPath("work")
 }
 
 func (c Config) MergePath() string {
-	return filepath.Join(c.Fs.Root, c.RunCmd.ImageName(), "merge")
+	return c.buildPath("merge")
+}
+
+func (c Config) buildPath(suffix string) string {
+	root := c.Fs.Root
+	if c.RunCmd.Volume != "" {
+		root = c.RunCmd.Volume
+	}
+	return filepath.Join(root, c.RunCmd.ImageName(), suffix)
 }

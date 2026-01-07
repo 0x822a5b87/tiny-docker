@@ -34,6 +34,10 @@ var runCommand = cli.Command{
 			Name:  "env,e",
 			Usage: "Set environment variables, format: `KEY=VALUE`",
 		},
+		&cli.StringSliceFlag{
+			Name:  "volume,v",
+			Usage: "Set volumes for the container",
+		},
 	},
 	Action: func(context *cli.Context) error {
 		image, args, err := util.GetImageAndArgs(context)
@@ -43,6 +47,7 @@ var runCommand = cli.Command{
 		}
 		runCommands := conf.RunCommands{}
 		runCommands.Tty = context.Bool("it")
+		runCommands.Volume = context.String("v")
 		runCommands.Image = image
 		runCommands.Args = args
 		runCommands.Cfg = conf.CgroupConfig{

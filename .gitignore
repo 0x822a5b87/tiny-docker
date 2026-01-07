@@ -34,3 +34,4 @@ go.work.sum
 .idea
 pkg/
 a.out
+mini-docker

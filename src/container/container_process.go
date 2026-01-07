@@ -23,6 +23,8 @@ func NewParentProcess(tty bool, commands []string, env []string) *exec.Cmd {
 			unix.CLONE_NEWNET |
 			unix.CLONE_NEWIPC,
 		Unshareflags: unix.CLONE_NEWNS,
+		Setctty:      tty,
+		Setsid:       tty,
 	}
 
 	if tty {

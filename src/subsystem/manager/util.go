@@ -5,6 +5,7 @@ import (
 
 	"github.com/0x822a5b87/tiny-docker/src/subsystem"
 	"github.com/0x822a5b87/tiny-docker/src/util"
+	"github.com/sirupsen/logrus"
 )
 
 func Write[I subsystem.Item, V subsystem.Value](f *CgroupFileSystem, ss subsystem.Subsystem[I, V]) error {
@@ -18,7 +19,9 @@ func Write[I subsystem.Item, V subsystem.Value](f *CgroupFileSystem, ss subsyste
 		return err
 	}
 
-	if err := os.WriteFile(cgroupPath, []byte(value.Into()), 0644); err != nil {
+	data := []byte(value.Into())
+	if err = os.WriteFile(cgroupPath, data, 0644); err != nil {
+		logrus.Errorf("error write value : {%s}", string(data))
 		return err
 	}
 

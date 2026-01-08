@@ -116,7 +116,7 @@ func newSubsystem[T subsystem.BaseSubsystem](fs *CgroupFileSystem, name string) 
 	}
 
 	if err != nil {
-		logrus.Errorf("[newSubsystem]")
+		logrus.Errorf("[newSubsystem]: {%s}", err)
 		return any(zeroSubsystem).(T), err
 	}
 

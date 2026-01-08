@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 func AppendEnv(cmd *exec.Cmd, key, value string) {
@@ -15,4 +16,9 @@ func AppendEnv(cmd *exec.Cmd, key, value string) {
 
 func GetEnv(key string) string {
 	return os.Getenv(key)
+}
+
+func GetBoolEnv(key string) bool {
+	v := os.Getenv(key)
+	return strings.ToLower(v) == "true"
 }

@@ -12,7 +12,7 @@ func (e Err) Error() string {
 }
 
 func (e Err) Wrap(wrapErr error) error {
-	return fmt.Errorf("error = {%s}: {%v}", e.Error(), wrapErr.Error())
+	return fmt.Errorf(e.Error(), wrapErr.Error())
 }
 
 var (

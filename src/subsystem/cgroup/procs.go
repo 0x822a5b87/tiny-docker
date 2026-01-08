@@ -15,6 +15,7 @@ type ProcsValue struct {
 }
 
 func (p *ProcsValue) From(s string) error {
+	s = strings.TrimSpace(s)
 	pidsStrArr := strings.Split(s, "\n")
 	p.pids = make([]ProcsItem, len(pidsStrArr))
 	for i, v := range pidsStrArr {

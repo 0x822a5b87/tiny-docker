@@ -8,6 +8,7 @@ import (
 
 type Commands struct {
 	Tty      bool
+	Detach   bool
 	Image    string
 	DstImage string
 	Args     []string
@@ -18,6 +19,7 @@ type Commands struct {
 
 type RunCommands struct {
 	Tty     bool
+	Detach  bool
 	Image   string
 	Args    []string
 	Cfg     CgroupConfig
@@ -28,6 +30,7 @@ type RunCommands struct {
 func (r RunCommands) IntoCommands() Commands {
 	return Commands{
 		Tty:     r.Tty,
+		Detach:  r.Detach,
 		Image:   r.Image,
 		Args:    r.Args,
 		Cfg:     r.Cfg,

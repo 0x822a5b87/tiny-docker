@@ -7,12 +7,14 @@ import (
 	"syscall"
 
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
 
 func RunContainerInitProcess(command string, args []string) error {
-	logrus.Infof("init process command: {%s}, args: {%v}", command, args)
+	logrus.Infof("init process command: {%s}, args: {%v}, container pid = {%d}", command, args, os.Getpid())
 	var err error
+	_ = setupDetachMode()
 	if err = SetupUnionFsFromEnv(); err != nil {
 		return err
 	}
@@ -30,6 +32,16 @@ func RunContainerInitProcess(command string, args []string) error {
 		logrus.Errorf("exec error : %s", err.Error())
 	}
 	return nil
+}
+
+func setupDetachMode() error {
+	detach := util.GetBoolEnv(constant.DetachMode)
+	if !detach {
+		return nil
+	}
+	sid, err := syscall.Setsid()
+	logrus.Infof("Running user process {%d} in detach mode.", sid)
+	return err
 }
 
 func pivotRoot(root string) error {

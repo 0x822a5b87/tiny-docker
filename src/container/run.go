@@ -16,27 +16,29 @@ import (
 )
 
 func Run(commands conf.RunCommands) error {
-	logrus.Infof("init config : %v", conf.GlobalConfig)
 	conf.LoadRunConfig(commands)
+	logrus.Infof("init config : %v", conf.GlobalConfig)
 	var err error
 	if err = setupFs(commands.Image); err != nil {
 		logrus.Error(err, "error setup fs.")
 		return err
 	}
-	parent := newParentProcess(commands.Tty, commands.Args, commands.UserEnv)
+	parent := newParentProcess()
 	setupEnv(parent)
 	if err = setupCgroup(commands.Args, commands.Cfg); err != nil {
 		return err
 	}
 	if err = parent.Start(); err != nil {
-		logrus.Error(err, "error start process.")
+		logrus.Error("error start process: ", err)
 		return err
 	}
-	if err = parent.Wait(); err != nil {
-		logrus.Error("error wait process:", err)
-		return err
+
+	if commands.Tty {
+		logrus.Infof("Running {%s} in attach mode.", conf.GlobalConfig.ImageName())
+		return parent.Wait()
 	}
-	os.Exit(-1)
+
+	logrus.Infof("Running {%s}, pid = {%d} exit.", conf.GlobalConfig.ImageName(), os.Getpid())
 	return nil
 }
 
@@ -48,6 +50,12 @@ func setupEnv(cmd *exec.Cmd) {
 	util.AppendEnv(cmd, constant.FsWriteLayerPath, conf.GlobalConfig.WritePath())
 	util.AppendEnv(cmd, constant.FsWorkLayerPath, conf.GlobalConfig.WorkPath())
 	util.AppendEnv(cmd, constant.FsMergeLayerPath, conf.GlobalConfig.MergePath())
+
+	if conf.GlobalConfig.Cmd.Detach {
+		util.AppendEnv(cmd, constant.DetachMode, "true")
+	} else {
+		util.AppendEnv(cmd, constant.DetachMode, "false")
+	}
 }
 
 func setupCgroup(commands []string, cfg conf.CgroupConfig) error {
@@ -125,10 +133,11 @@ func setCpuShares(cgroupManager *manager.CgroupManager, cfg conf.CgroupConfig) e
 	return cgroupManager.SetCpuMax(v.Quota, v.Period)
 }
 
-func newParentProcess(tty bool, commands []string, env []string) *exec.Cmd {
+func newParentProcess() *exec.Cmd {
+	commands := conf.GlobalConfig.Cmd
 	args := []string{"init"}
-	for _, command := range commands {
-		args = append(args, command)
+	for _, arg := range commands.Args {
+		args = append(args, arg)
 	}
 	cmd := exec.Command(constant.UnixProcSelfExe, args...)
 	cmd.SysProcAttr = &unix.SysProcAttr{
@@ -138,17 +147,56 @@ func newParentProcess(tty bool, commands []string, env []string) *exec.Cmd {
 			unix.CLONE_NEWNET |
 			unix.CLONE_NEWIPC,
 		Unshareflags: unix.CLONE_NEWNS,
-		Setctty:      tty,
-		Setsid:       tty,
 	}
 
+	setTtyMode(cmd, commands.Tty)
+	setDetachMode(cmd, commands.Detach, commands.Tty)
+
+	cmd.Dir = conf.GlobalConfig.MergePath()
+	cmd.Env = commands.UserEnv
+	return cmd
+}
+
+func setTtyMode(cmd *exec.Cmd, tty bool) {
+	cmd.SysProcAttr.Setctty = tty
 	if tty {
-		logrus.Info("Running new process in tty.")
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
+	} else {
+		nullFile, err := os.OpenFile("/dev/null", os.O_RDWR, 0666)
+		if err != nil {
+			logrus.Warnf("open /dev/null failed: %v", err)
+		} else {
+			cmd.Stdin = nullFile
+			cmd.Stdout = nullFile
+			cmd.Stderr = nullFile
+		}
 	}
-	cmd.Dir = conf.GlobalConfig.MergePath()
-	cmd.Env = env
-	return cmd
+}
+
+func setDetachMode(cmd *exec.Cmd, detach bool, tty bool) {
+	if detach {
+		logrus.Infof("Running new process in detach mode.")
+		cmd.SysProcAttr.Setsid = true
+		cmd.SysProcAttr.Setctty = false
+	} else {
+		logrus.Infof("Running new process in attach mode.")
+		cmd.SysProcAttr.Setsid = true
+		cmd.SysProcAttr.Noctty = !tty
+	}
+
+	{
+		// TODO delete me
+		cmd.Stdout = os.Stdout
+	}
+}
+
+func nullFileWithPanic() *os.File {
+	nullFile, err := util.NullFile()
+	if err != nil {
+		logrus.Errorf("error open null file : %s", err.Error())
+		panic(err)
+	}
+	return nullFile
 }

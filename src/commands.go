@@ -18,6 +18,10 @@ var runCommand = cli.Command{
 			Name:  "it",
 			Usage: "enable tty",
 		},
+		cli.BoolFlag{
+			Name:  "d",
+			Usage: "detach container",
+		},
 		cli.StringFlag{
 			Name:  "m",
 			Usage: "memory limit",
@@ -47,6 +51,7 @@ var runCommand = cli.Command{
 		}
 		runCommands := conf.RunCommands{}
 		runCommands.Tty = context.Bool("it")
+		runCommands.Detach = context.Bool("d")
 		runCommands.Volume = context.String("v")
 		runCommands.Image = image
 		runCommands.Args = args

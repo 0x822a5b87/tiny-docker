@@ -1,12 +1,18 @@
 package util
 
 import (
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/sirupsen/logrus"
 )
+
+func NullFile() (*os.File, error) {
+	return os.OpenFile(constant.NullFilePath, os.O_RDWR, 0666)
+}
 
 func ExtractNameFromTarPath(tarPath string) string {
 	filename := filepath.Base(tarPath)

@@ -23,6 +23,9 @@ func (m *MaxValue) From(s string) error {
 }
 
 func (m *MaxValue) Into() string {
+	if m.Bytes == 0 {
+		return constant.LiteralMax
+	}
 	return strconv.Itoa(int(m.Bytes))
 }
 

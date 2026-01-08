@@ -17,7 +17,7 @@ kanban
     [Manage network for containers]
   [Not Support]
     [Pull/Commit an actual image file from docker-hub]
-    [Manage all containers that has been run]
+    [containerd/runc/containerd-shim]
 ```
 
 # references

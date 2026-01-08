@@ -128,6 +128,7 @@ func setCpuShares(cgroupManager *manager.CgroupManager, cfg conf.CgroupConfig) e
 	v := cpu.MaxValue{}
 	err := v.From(cfg.CpuShares)
 	if err != nil {
+		logrus.Errorf("set cpu shares error : %s", err.Error())
 		return err
 	}
 	return cgroupManager.SetCpuMax(v.Quota, v.Period)

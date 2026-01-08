@@ -19,6 +19,10 @@ type MaxValue struct {
 
 func (m *MaxValue) From(s string) error {
 	s = strings.TrimSpace(s)
+	if s == "" {
+		m.noLimit()
+		return nil
+	}
 	items := strings.Split(s, " ")
 	if len(items) != 2 {
 		return constant.ErrMalformedType
@@ -50,6 +54,11 @@ func (m *MaxValue) Into() string {
 	}
 	period = strconv.Itoa(m.Period)
 	return fmt.Sprintf("%s %s", quota, period)
+}
+
+func (m *MaxValue) noLimit() {
+	m.Quota = math.MaxInt
+	m.Period = constant.CpuPeriod
 }
 
 func NewCpuMaxValueSubsystem(data string) (*MaxValueSubsystem, error) {
@@ -89,7 +98,7 @@ func (m *MaxValueSubsystem) Del(max MaxItem) error {
 }
 
 func (m *MaxValueSubsystem) Empty() bool {
-	return (m.value.Quota == math.MaxInt && m.value.Period == 100000) ||
+	return (m.value.Quota == math.MaxInt && m.value.Period == constant.CpuPeriod) ||
 		(m.value.Quota == 0 && m.value.Period == 0)
 }
 

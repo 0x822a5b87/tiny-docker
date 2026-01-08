@@ -164,14 +164,10 @@ func setTtyMode(cmd *exec.Cmd, tty bool) {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 	} else {
-		nullFile, err := os.OpenFile("/dev/null", os.O_RDWR, 0666)
-		if err != nil {
-			logrus.Warnf("open /dev/null failed: %v", err)
-		} else {
-			cmd.Stdin = nullFile
-			cmd.Stdout = nullFile
-			cmd.Stderr = nullFile
-		}
+		nullFile := nullFileWithPanic()
+		cmd.Stdin = nullFile
+		cmd.Stdout = nullFile
+		cmd.Stderr = nullFile
 	}
 }
 
@@ -184,11 +180,6 @@ func setDetachMode(cmd *exec.Cmd, detach bool, tty bool) {
 		logrus.Infof("Running new process in attach mode.")
 		cmd.SysProcAttr.Setsid = true
 		cmd.SysProcAttr.Noctty = !tty
-	}
-
-	{
-		// TODO delete me
-		cmd.Stdout = os.Stdout
 	}
 }
 

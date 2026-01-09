@@ -21,8 +21,10 @@ func main() {
 	app.Commands = []cli.Command{
 		daemonCommand,
 		initCommand,
-		initContainerCommand,
+
 		runCommand,
+		initContainerCommand,
+
 		commitCommand,
 		psCommand,
 	}

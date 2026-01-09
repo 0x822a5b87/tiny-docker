@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/handler"
-	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,7 +18,7 @@ func RunDaemon() error {
 }
 
 func setupDetachMode() error {
-	detach := util.GetBoolEnv(constant.DetachMode)
+	detach := conf.DetachMode.GetBoolean()
 	if !detach {
 		return nil
 	}

@@ -3,10 +3,11 @@ package conf
 import (
 	"path/filepath"
 
-	"github.com/0x822a5b87/tiny-docker/src/util"
+	"github.com/0x822a5b87/tiny-docker/src/constant"
 )
 
 type Commands struct {
+	Id       string
 	Tty      bool
 	Detach   bool
 	Image    string
@@ -28,7 +29,9 @@ type RunCommands struct {
 }
 
 func (r RunCommands) IntoCommands() Commands {
+	fullID, _ := GenContainerID()
 	return Commands{
+		Id:      fullID,
 		Tty:     r.Tty,
 		Detach:  r.Detach,
 		Image:   r.Image,
@@ -59,9 +62,10 @@ type CgroupConfig struct {
 }
 
 type Config struct {
-	Meta MetaConfig `yaml:"meta"`
-	Fs   FsConfig   `yaml:"fs"`
-	Cmd  Commands
+	Meta     MetaConfig `yaml:"meta"`
+	Fs       FsConfig   `yaml:"fs"`
+	Cmd      Commands   `yaml:"cmd"`
+	InnerEnv []string   `yaml:"inner_env"`
 }
 
 type MetaConfig struct {
@@ -73,33 +77,49 @@ type FsConfig struct {
 }
 
 func (c Config) ImageName() string {
-	return util.ExtractNameFromTarPath(c.Cmd.Image)
+	return ExtractNameFromTarPath(c.Cmd.Image)
 }
 
 func (c Config) ReadPath() string {
-	return c.buildPath("read")
+	return c.buildSharePath("images", "read")
 }
 
 func (c Config) WritePath() string {
-	return c.buildPath("write")
+	return c.buildIndPath("images", "write", c.Cmd.Id)
 }
 
 func (c Config) WorkPath() string {
-	return c.buildPath("work")
+	return c.buildIndPath("images", "work", c.Cmd.Id)
 }
 
 func (c Config) MergePath() string {
-	return c.buildPath("merge")
+	return c.buildIndPath("images", "merge", c.Cmd.Id)
 }
 
-func (c Config) RootPath() string {
+func (c Config) DockerdUdsFile() string {
+	return filepath.Join(c.RootPath("runtime"), constant.DockerdUdsConnFile)
+}
+
+func (c Config) DockerdUdsPidFile() string {
+	return filepath.Join(c.RootPath("runtime"), constant.DockerdUdsPidFile)
+}
+
+func (c Config) DockerdLogFile() string {
+	return filepath.Join(c.RootPath("logs"), constant.DockerdLogFile)
+}
+
+func (c Config) RootPath(pathType string) string {
 	root := c.Fs.Root
 	if c.Cmd.Volume != "" {
 		root = c.Cmd.Volume
 	}
-	return filepath.Join(root, c.ImageName())
+	return filepath.Join(root, pathType, c.ImageName())
 }
 
-func (c Config) buildPath(suffix string) string {
-	return filepath.Join(c.RootPath(), suffix)
+func (c Config) buildSharePath(pathType string, suffix string) string {
+	return filepath.Join(c.RootPath(pathType), suffix)
+}
+
+func (c Config) buildIndPath(pathType, suffix string, id string) string {
+	return filepath.Join(c.RootPath(pathType), suffix, id)
 }

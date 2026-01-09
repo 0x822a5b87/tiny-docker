@@ -30,5 +30,4 @@ func SendCommitRequest(commands conf.CommitCommands) error {
 	}
 	log.Infof("rsp: %v", rsp)
 	return nil
-
 }

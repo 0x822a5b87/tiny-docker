@@ -7,7 +7,9 @@ import (
 	"os"
 	"syscall"
 
+	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -17,7 +19,13 @@ func CreateUdsServer() error {
 		return nil
 	}
 
-	udsPath := constant.DockerdUdsConnFile
+	udsPath := conf.RuntimeDockerdUdsFile.Get()
+
+	err := util.EnsureFileExists(udsPath)
+	if err != nil {
+		logrus.Errorf("UDS server uds path does not exist: {%s}", udsPath)
+		return err
+	}
 	_ = os.Remove(udsPath)
 
 	network := constant.OS
@@ -35,8 +43,24 @@ func CreateUdsServer() error {
 	if err = os.Chmod(udsPath, 0600); err != nil {
 		return err
 	}
-	err = os.WriteFile(constant.DockerdUdsPidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0600)
-	if err != nil {
+
+	pidFile := conf.RuntimeDockerdUdsPidFile.Get()
+	if err = util.EnsureFileExists(pidFile); err != nil {
+		logrus.Errorf("UDS pid file does not exist: {%s}", pidFile)
+		return err
+	}
+
+	{
+		// TODO delete me
+		file, err := os.Open(pidFile)
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+	}
+
+	if err = os.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0600); err != nil {
+		logrus.Errorf("error write file : %v", pidFile)
 		return err
 	}
 
@@ -53,8 +77,17 @@ func CreateUdsServer() error {
 }
 
 func isUdsServerRunning() bool {
-	pidStr, err := os.ReadFile(constant.DockerdUdsPidFile)
+	pidFile := conf.RuntimeDockerdUdsPidFile.Get()
+	if err := util.EnsureFileExists(pidFile); err != nil {
+		logrus.Errorf("error check file status : %v", err)
+		return false
+	}
+	pidStr, err := os.ReadFile(pidFile)
+	if os.IsNotExist(err) {
+		return false
+	}
 	if err != nil {
+		logrus.Errorf("error read UDS pid file: %v", err)
 		return false
 	}
 	pid := 0

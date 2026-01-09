@@ -174,34 +174,13 @@ func newContainerCmd() (*exec.Cmd, error) {
 
 	cmd.Dir = conf.GlobalConfig.MergePath()
 	cmd.Env = commands.UserEnv
-	setupEnv(cmd)
+	cmd.Env = append(cmd.Env, conf.GlobalConfig.InnerEnv...)
 
 	if err := configureContainerProcessTerminalAndDaemonMode(cmd, commands.Tty, commands.Detach); err != nil {
 		return nil, err
 	}
 
 	return cmd, nil
-}
-
-func configureDaemonProcessTerminalAndDaemonMode(cmd *exec.Cmd, debug bool) error {
-	cmd.SysProcAttr.Setsid = true
-	cmd.SysProcAttr.Setctty = false
-
-	logFile, err := os.OpenFile(constant.DockerdLogFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-	if err != nil {
-		logrus.Fatal("Failed to open log file: ", err)
-		return err
-	}
-
-	if debug {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	} else {
-		cmd.Stdout = logFile
-		cmd.Stderr = logFile
-	}
-
-	return nil
 }
 
 func configureContainerProcessTerminalAndDaemonMode(cmd *exec.Cmd, interactive bool, detach bool) error {

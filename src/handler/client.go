@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net"
 
+	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/sirupsen/logrus"
 )
@@ -16,7 +17,7 @@ func sendRequest(req *Request) (error, Response) {
 
 	// connect client
 	conn, err := net.DialUnix(constant.OS, nil, &net.UnixAddr{
-		Name: constant.DockerdUdsConnFile,
+		Name: conf.RuntimeDockerdUdsFile.Get(),
 		Net:  constant.OS,
 	})
 	if err != nil {

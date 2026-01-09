@@ -28,6 +28,54 @@ func GenPidPath(pid int) string {
 	return fmt.Sprintf("%s/%s", constant.CgroupBasePath, constant.DefaultContainerName)
 }
 
+func EnsureOpenFilePath(path string) (*os.File, error) {
+	if err := EnsureFilePathExist(path); err != nil {
+		return nil, err
+	}
+	logFile, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		logrus.Fatal("Failed to open log file: ", err)
+		return nil, err
+	}
+	return logFile, err
+}
+
+func EnsureFileExists(path string) error {
+	logDir := filepath.Dir(path)
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		logrus.Errorf("Failed to create path directory: %v", err) // 改为 Errorf，避免直接终止进程
+		return err
+	}
+
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			file, createErr := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
+			if createErr != nil {
+				logrus.Errorf("Failed to create file %s: %v", path, createErr)
+				return createErr
+			}
+			if closeErr := file.Close(); closeErr != nil {
+				logrus.Warnf("Failed to close created file %s: %v", path, closeErr)
+			}
+			return nil
+		}
+		logrus.Errorf("Failed to stat file %s: %v", path, err)
+		return err
+	}
+
+	return nil
+}
+
+func EnsureFilePathExist(path string) error {
+	logDir := filepath.Dir(path)
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		logrus.Fatal("Failed to create path directory: ", err)
+		return err
+	}
+	return nil
+}
+
 func EnsureDirectoryExists(path string) error {
 	logrus.Debugf("Ensuring directory exists: {%s}", path)
 	if err := os.MkdirAll(path, 0755); err != nil {

@@ -1,6 +1,7 @@
 package conf
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -8,6 +9,10 @@ import (
 )
 
 var GlobalConfig Config
+
+func LoadDaemonConfig() {
+	loadConfig()
+}
 
 func LoadRunConfig(commands RunCommands) {
 	loadConfig()
@@ -20,6 +25,11 @@ func LoadCommitConfig(cmd CommitCommands) {
 }
 
 func loadConfig() {
+	loadFile()
+	environ()
+}
+
+func loadFile() {
 	data, err := os.ReadFile("config.yaml")
 	if err != nil {
 		logrus.Errorf("Error reading config file: %v", err)
@@ -31,4 +41,31 @@ func loadConfig() {
 		logrus.Errorf("Error unmarshal config file: %v", err)
 		panic(err)
 	}
+}
+
+func environ() {
+	env := make([]string, 0)
+	env = appendEnv(env, MetaName, GlobalConfig.Meta.Name)
+	env = appendEnv(env, FsBasePath, GlobalConfig.Fs.Root)
+
+	env = appendEnv(env, FsReadLayerPath, GlobalConfig.ReadPath())
+	env = appendEnv(env, FsWriteLayerPath, GlobalConfig.WritePath())
+	env = appendEnv(env, FsWorkLayerPath, GlobalConfig.WorkPath())
+	env = appendEnv(env, FsMergeLayerPath, GlobalConfig.MergePath())
+
+	env = appendEnv(env, RuntimeDockerdUdsFile, GlobalConfig.DockerdUdsFile())
+	env = appendEnv(env, RuntimeDockerdUdsPidFile, GlobalConfig.DockerdUdsPidFile())
+	env = appendEnv(env, RuntimeDockerdLogFile, GlobalConfig.DockerdLogFile())
+
+	if GlobalConfig.Cmd.Detach {
+		env = appendEnv(env, DetachMode, "true")
+	} else {
+		env = appendEnv(env, DetachMode, "false")
+	}
+
+	GlobalConfig.InnerEnv = env
+}
+
+func appendEnv(environ []string, key EnvVariable, value string) []string {
+	return append(environ, fmt.Sprintf("%s=%s", key.String(), value))
 }

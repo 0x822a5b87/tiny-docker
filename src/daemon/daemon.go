@@ -3,6 +3,7 @@ package daemon
 import (
 	"os/exec"
 
+	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
@@ -10,7 +11,8 @@ import (
 )
 
 func StartDockerd(debug bool) error {
-	cmd, err := newDaemonProcessCmd(debug)
+	initContext()
+	cmd, err := newDaemonProcessCmd()
 	if err != nil {
 		return err
 	}
@@ -23,7 +25,7 @@ func StartDockerd(debug bool) error {
 }
 
 // create mini-dockerd, always running on notty and detach mode.
-func newDaemonProcessCmd(debug bool) (*exec.Cmd, error) {
+func newDaemonProcessCmd() (*exec.Cmd, error) {
 	args := []string{constant.InitDaemon.String()}
 	execPath, err := util.GetExecutableAbsolutePath()
 	if err != nil {
@@ -31,9 +33,40 @@ func newDaemonProcessCmd(debug bool) (*exec.Cmd, error) {
 	}
 	cmd := exec.Command(execPath, args...)
 	cmd.SysProcAttr = &unix.SysProcAttr{}
-	if err = configureDaemonProcessTerminalAndDaemonMode(cmd, debug); err != nil {
+	if err = configureDaemonProcessTerminalAndDaemonMode(cmd, conf.GlobalConfig.InnerEnv); err != nil {
 		return nil, err
 	}
 
 	return cmd, nil
+}
+
+func configureDaemonProcessTerminalAndDaemonMode(cmd *exec.Cmd, env []string) error {
+	cmd.SysProcAttr.Setsid = true
+	cmd.SysProcAttr.Setctty = false
+
+	logFile, err := util.EnsureOpenFilePath(conf.RuntimeDockerdLogFile.Get())
+	if err != nil {
+		logrus.Fatal("Failed to open log file: ", err)
+		return err
+	}
+
+	cmd.Stdout = logFile
+	cmd.Stderr = logFile
+
+	cmd.Env = env
+
+	return nil
+}
+
+func initContext() {
+	conf.LoadDaemonConfig()
+	ensureContext(conf.RuntimeDockerdUdsFile.Get())
+	ensureContext(conf.RuntimeDockerdUdsPidFile.Get())
+	ensureContext(conf.RuntimeDockerdLogFile.Get())
+}
+
+func ensureContext(path string) {
+	if err := util.EnsureFileExists(path); err != nil {
+		panic(err)
+	}
 }

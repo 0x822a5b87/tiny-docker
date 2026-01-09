@@ -9,7 +9,7 @@ import (
 func Commit(cmd conf.CommitCommands) error {
 	logrus.Infof("Commit Commands: %s", cmd)
 	conf.LoadCommitConfig(cmd)
-	if err := setupUnionFsFromConfig(); err != nil {
+	if err := setupUnionFsFromEnv(); err != nil {
 		logrus.Error("error setting up union fs", err)
 		return err
 	}

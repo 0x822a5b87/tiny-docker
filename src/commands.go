@@ -105,7 +105,7 @@ var initContainerCommand = cli.Command{
 }
 
 var commitCommand = cli.Command{
-	Name:  "commit",
+	Name:  constant.Commit.String(),
 	Usage: `Create a compression file(.tar) from a daemon`,
 	Flags: []cli.Flag{
 		&cli.StringSliceFlag{
@@ -127,7 +127,8 @@ var commitCommand = cli.Command{
 			DstName: context.String("t"),
 			Volume:  context.String("v"),
 		}
-		return daemon.Commit(cmd)
+
+		return handler.SendCommitRequest(cmd)
 	},
 }
 
@@ -136,14 +137,6 @@ var psCommand = cli.Command{
 	Usage: `Create a compression file(.tar) from a daemon`,
 	Flags: []cli.Flag{},
 	Action: func(context *cli.Context) error {
-		err, rsp := handler.SendRequest(handler.Request{
-			Act: constant.Ps,
-		})
-		if err != nil {
-			log.Errorf("error sending ps request: %v\n", err)
-			return err
-		}
-		log.Infof("rsp: %v", rsp)
-		return nil
+		return handler.SendPsRequest()
 	},
 }

@@ -11,21 +11,20 @@ import (
 var GlobalConfig Config
 
 func LoadDaemonConfig() {
-	loadConfig()
+	loadConfig(Commands{})
 }
 
 func LoadRunConfig(commands RunCommands) {
-	loadConfig()
-	GlobalConfig.Cmd = commands.IntoCommands()
+	loadConfig(commands.IntoCommands())
 }
 
 func LoadCommitConfig(cmd CommitCommands) {
-	loadConfig()
-	GlobalConfig.Cmd = cmd.IntoCommands()
+	loadConfig(cmd.IntoCommands())
 }
 
-func loadConfig() {
+func loadConfig(commands Commands) {
 	loadFile()
+	GlobalConfig.Cmd = commands
 	environ()
 }
 

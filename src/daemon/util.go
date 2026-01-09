@@ -1,14 +1,32 @@
-package container
+package daemon
 
 import (
+	"os/exec"
+
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
 
-// SetupUnionFsFromEnv init read-layer, write-layer, work-layer, merge-layer for container
-func SetupUnionFsFromEnv() error {
+func setupEnv(cmd *exec.Cmd) {
+	util.AppendEnv(cmd, constant.MetaName, conf.GlobalConfig.Meta.Name)
+	util.AppendEnv(cmd, constant.FsBasePath, conf.GlobalConfig.Fs.Root)
+
+	util.AppendEnv(cmd, constant.FsReadLayerPath, conf.GlobalConfig.ReadPath())
+	util.AppendEnv(cmd, constant.FsWriteLayerPath, conf.GlobalConfig.WritePath())
+	util.AppendEnv(cmd, constant.FsWorkLayerPath, conf.GlobalConfig.WorkPath())
+	util.AppendEnv(cmd, constant.FsMergeLayerPath, conf.GlobalConfig.MergePath())
+
+	if conf.GlobalConfig.Cmd.Detach {
+		util.AppendEnv(cmd, constant.DetachMode, "true")
+	} else {
+		util.AppendEnv(cmd, constant.DetachMode, "false")
+	}
+}
+
+// setupUnionFsFromEnv init read-layer, write-layer, work-layer, merge-layer for daemon
+func setupUnionFsFromEnv() error {
 	readPath := util.GetEnv(constant.FsReadLayerPath)
 	writePath := util.GetEnv(constant.FsWriteLayerPath)
 	workPath := util.GetEnv(constant.FsWorkLayerPath)
@@ -22,7 +40,7 @@ func SetupUnionFsFromEnv() error {
 	return nil
 }
 
-func SetupUnionFsFromConfig() error {
+func setupUnionFsFromConfig() error {
 	readPath := conf.GlobalConfig.ReadPath()
 	writePath := conf.GlobalConfig.WritePath()
 	workPath := conf.GlobalConfig.WorkPath()
@@ -36,7 +54,7 @@ func SetupUnionFsFromConfig() error {
 	return nil
 }
 
-func ClearUnionFsFromConfig() error {
+func clearUnionFsFromConfig() error {
 	mergePath := conf.GlobalConfig.MergePath()
 	logrus.Infof("clear merge path: %s", mergePath)
 	if err := util.UnmountOverlayFS(mergePath); err != nil {

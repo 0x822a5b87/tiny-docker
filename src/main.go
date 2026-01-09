@@ -8,7 +8,7 @@ import (
 )
 
 const usage = `
-I'm a simple container runtime implementation.
+I'm a simple daemon runtime implementation.
 The purpose of this project is to learn how docker works and how to write a docker from scratch.
 Enjoy it, just for fun.
 `
@@ -19,9 +19,12 @@ func main() {
 	app.Usage = usage
 
 	app.Commands = []cli.Command{
+		daemonCommand,
 		initCommand,
+		initContainerCommand,
 		runCommand,
 		commitCommand,
+		psCommand,
 	}
 
 	app.Before = func(c *cli.Context) error {

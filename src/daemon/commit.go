@@ -1,4 +1,4 @@
-package container
+package daemon
 
 import (
 	"github.com/0x822a5b87/tiny-docker/src/conf"
@@ -9,12 +9,12 @@ import (
 func Commit(cmd conf.CommitCommands) error {
 	logrus.Infof("Commit Commands: %s", cmd)
 	conf.LoadCommitConfig(cmd)
-	if err := SetupUnionFsFromConfig(); err != nil {
+	if err := setupUnionFsFromConfig(); err != nil {
 		logrus.Error("error setting up union fs", err)
 		return err
 	}
 	defer func() {
-		err := ClearUnionFsFromConfig()
+		err := clearUnionFsFromConfig()
 		if err != nil {
 			logrus.Error("error clear up union fs", err)
 		}

@@ -1,37 +1,20 @@
-package container
+package daemon
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 	"syscall"
 
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/handler"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
 
-func RunContainerInitProcess(command string, args []string) error {
-	logrus.Infof("init process command: {%s}, args: {%v}, container pid = {%d}", command, args, os.Getpid())
-	var err error
+func RunDaemon() error {
+	logrus.Info("Starting daemon process")
 	_ = setupDetachMode()
-	if err = SetupUnionFsFromEnv(); err != nil {
-		return err
-	}
-	logrus.Info("setup layer success.")
-	if err = setupMount(); err != nil {
-		return err
-	}
-	logrus.Info("setup mount success.")
-	path, err := exec.LookPath(command)
-	if err != nil {
-		return err
-	}
-	logrus.Infof("running command {%s} with args {%s}", path, args)
-	if err = syscall.Exec(path, args, os.Environ()); err != nil {
-		logrus.Errorf("exec error : %s", err.Error())
-	}
-	return nil
+	return handler.CreateUdsServer()
 }
 
 func setupDetachMode() error {

@@ -1,18 +1,41 @@
 package main
 
 import (
-	"os"
-
 	"github.com/0x822a5b87/tiny-docker/src/conf"
-	"github.com/0x822a5b87/tiny-docker/src/container"
+	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/daemon"
+	"github.com/0x822a5b87/tiny-docker/src/handler"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
+var daemonCommand = cli.Command{
+	Name:  constant.Daemon.String(),
+	Usage: `Start dockerd to serve all API requests`,
+	Flags: []cli.Flag{
+		&cli.BoolFlag{
+			Name:  "debug",
+			Usage: "Enable debug mode",
+		},
+	},
+	Action: func(context *cli.Context) error {
+		debug := context.Bool("debug")
+		return daemon.StartDockerd(debug)
+	},
+}
+
+var initCommand = cli.Command{
+	Name:  constant.InitDaemon.String(),
+	Usage: `Init daemon process run user's process in daemon. Do not call it outside.`,
+	Action: func(context *cli.Context) error {
+		return daemon.RunDaemon()
+	},
+}
+
 var runCommand = cli.Command{
-	Name:  "run",
-	Usage: `Create a container with namespace and cgroups limit tiny-docker run -it [command]`,
+	Name:  string(constant.Run),
+	Usage: `Create a daemon with namespace and cgroups limit tiny-docker run -it [command]`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "it",
@@ -20,7 +43,7 @@ var runCommand = cli.Command{
 		},
 		cli.BoolFlag{
 			Name:  "d",
-			Usage: "detach container",
+			Usage: "detach daemon",
 		},
 		cli.StringFlag{
 			Name:  "m",
@@ -40,7 +63,7 @@ var runCommand = cli.Command{
 		},
 		&cli.StringSliceFlag{
 			Name:  "volume,v",
-			Usage: "Set volumes for the container",
+			Usage: "Set volumes for the daemon",
 		},
 	},
 	Action: func(context *cli.Context) error {
@@ -60,38 +83,42 @@ var runCommand = cli.Command{
 			CpuShares:   context.String("c"),
 		}
 		runCommands.UserEnv = context.StringSlice("env")
-		return container.Run(runCommands)
+		err = daemon.RunContainerCmd(runCommands)
+		if err != nil {
+			log.Errorf("error sending run request: %v\n", err)
+			return err
+		}
+		return nil
 	},
 }
 
-var initCommand = cli.Command{
-	Name:  "init",
-	Usage: `Init container process run user's process in container. Do not call it outside.`,
+var initContainerCommand = cli.Command{
+	Name:  constant.InitContainer.String(),
+	Usage: `Init container process run user's process in daemon. Do not call it outside.`,
 	Action: func(context *cli.Context) error {
-		log.Infof("init come on pid : %d", os.Getpid())
-		args, err := util.GetArgs(context)
+		args, err := util.GetInitArgs(context)
 		if err != nil {
 			return err
 		}
-		return container.RunContainerInitProcess(args[0], args)
+		return daemon.RunContainer(args[0], args)
 	},
 }
 
 var commitCommand = cli.Command{
 	Name:  "commit",
-	Usage: `Create a compression file(.tar) from a container`,
+	Usage: `Create a compression file(.tar) from a daemon`,
 	Flags: []cli.Flag{
 		&cli.StringSliceFlag{
 			Name:  "s",
-			Usage: "Name of container to commit",
+			Usage: "Name of daemon to commit",
 		},
 		&cli.StringSliceFlag{
 			Name:  "t",
-			Usage: "Target name of committed container",
+			Usage: "Target name of committed daemon",
 		},
 		&cli.StringSliceFlag{
 			Name:  "v",
-			Usage: "Volume of container to commit",
+			Usage: "Volume of daemon to commit",
 		},
 	},
 	Action: func(context *cli.Context) error {
@@ -100,6 +127,23 @@ var commitCommand = cli.Command{
 			DstName: context.String("t"),
 			Volume:  context.String("v"),
 		}
-		return container.Commit(cmd)
+		return daemon.Commit(cmd)
+	},
+}
+
+var psCommand = cli.Command{
+	Name:  constant.Ps.String(),
+	Usage: `Create a compression file(.tar) from a daemon`,
+	Flags: []cli.Flag{},
+	Action: func(context *cli.Context) error {
+		err, rsp := handler.SendRequest(handler.Request{
+			Act: constant.Ps,
+		})
+		if err != nil {
+			log.Errorf("error sending ps request: %v\n", err)
+			return err
+		}
+		log.Infof("rsp: %v", rsp)
+		return nil
 	},
 }

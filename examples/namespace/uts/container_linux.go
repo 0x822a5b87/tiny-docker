@@ -7,7 +7,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// StartContainer start a container with UTS Namespace in linux
+// StartContainer start a daemon with UTS Namespace in linux
 func StartContainer(cmd string) error {
 	command := exec.Command(cmd)
 	command.Stdin = os.Stdin

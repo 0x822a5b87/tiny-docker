@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -9,6 +10,19 @@ import (
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/sirupsen/logrus"
 )
+
+func GetFdRealPath(f *os.File) (string, error) {
+	if f == nil {
+		return "", fmt.Errorf("file is nil")
+	}
+	fd := f.Fd()
+	linkPath := filepath.Join("/proc/self/fd", fmt.Sprintf("%d", fd))
+	realPath, err := os.Readlink(linkPath)
+	if err != nil {
+		return "", fmt.Errorf("read link failed: %v", err)
+	}
+	return realPath, nil
+}
 
 func NullFile() (*os.File, error) {
 	return os.OpenFile(constant.NullFilePath, os.O_RDWR, 0666)

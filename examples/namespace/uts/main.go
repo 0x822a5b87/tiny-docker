@@ -7,10 +7,10 @@ import (
 
 func main() {
 	if runtime.GOOS == "darwin" {
-		log.Fatal("error: container engine only runs on Linux (macOS for development only)")
+		log.Fatal("error: daemon engine only runs on Linux (macOS for development only)")
 	}
 
 	if err := StartContainer("sh"); err != nil {
-		log.Fatal("start container failed:", err)
+		log.Fatal("start daemon failed:", err)
 	}
 }

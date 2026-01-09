@@ -2,12 +2,18 @@ package util
 
 import (
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
-func GetArgs(context *cli.Context) ([]string, error) {
+func IsDaemonProcess(args []string) bool {
+	return len(args) == 1 && args[0] == constant.Daemon.String()
+}
+
+func GetInitArgs(context *cli.Context) ([]string, error) {
 	commands := make([]string, 0)
 	if len(context.Args()) < 1 {
+		logrus.Error("GetInitArgs error : No command to execute")
 		return commands, constant.ErrMalformedArgs
 	}
 
@@ -20,6 +26,7 @@ func GetArgs(context *cli.Context) ([]string, error) {
 func GetImageAndArgs(context *cli.Context) (string, []string, error) {
 	commands := make([]string, 0)
 	if len(context.Args()) < 1 {
+		logrus.Error("GetImageAndArgs error : No command to execute")
 		return "", commands, constant.ErrMalformedArgs
 	}
 

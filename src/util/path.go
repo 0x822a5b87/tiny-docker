@@ -3,11 +3,26 @@ package util
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"syscall"
 
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/sirupsen/logrus"
 )
+
+func GetExecutableAbsolutePath() (string, error) {
+	path, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("os.Executable failed: %v", err)
+	}
+
+	realPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return "", fmt.Errorf("filepath.EvalSymlinks failed: %v", err)
+	}
+
+	return realPath, nil
+}
 
 func GenPidPath(pid int) string {
 	return fmt.Sprintf("%s/%s", constant.CgroupBasePath, constant.DefaultContainerName)

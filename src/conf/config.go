@@ -68,6 +68,10 @@ type PsCommand struct {
 	All bool
 }
 
+type StopCommand struct {
+	ContainerIds []string
+}
+
 type CgroupConfig struct {
 	MemoryLimit string
 	CpuShares   string

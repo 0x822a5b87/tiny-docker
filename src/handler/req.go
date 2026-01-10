@@ -8,7 +8,7 @@ import (
 
 type Request struct {
 	Act    constant.Action `json:"act"`
-	Params []byte          `json:"params"`
+	Params string          `json:"params"`
 }
 
 func ParamsIntoRequest[T any](act constant.Action, data T) (*Request, error) {
@@ -18,12 +18,12 @@ func ParamsIntoRequest[T any](act constant.Action, data T) (*Request, error) {
 	}
 	return &Request{
 		Act:    act,
-		Params: params,
+		Params: string(params),
 	}, nil
 }
 
 func ParamsFromRequest[T any](request *Request) (T, error) {
 	var t T
-	err := json.Unmarshal(request.Params, &t)
+	err := json.Unmarshal([]byte(request.Params), &t)
 	return t, err
 }

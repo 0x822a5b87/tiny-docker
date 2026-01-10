@@ -34,7 +34,7 @@ func handleCommit(request handler.Request) (handler.Response, error) {
 	if err != nil {
 		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
 	}
-	return handler.SuccessResponse("")
+	return handler.SuccessResponse("{}")
 }
 
 func handleContainerRun(request handler.Request) (handler.Response, error) {
@@ -47,18 +47,18 @@ func handleContainerRun(request handler.Request) (handler.Response, error) {
 	if err != nil {
 		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
 	}
-	return handler.SuccessResponse("")
+	return handler.SuccessResponse("{}")
 }
 
 func handleContainerStop(request handler.Request) (handler.Response, error) {
-	c, err := handler.ParamsFromRequest[entity.Container](&request)
+	containers, err := handler.ParamsFromRequest[[]entity.Container](&request)
 	if err != nil {
 		logrus.Errorf("error parse container stop request: %s", err.Error())
 		return handler.ErrorMessageResponse("error parse container stop request", constant.ErrMalformedUdsReq)
 	}
-	err = stopContainer(c)
+	err = stopContainers(containers)
 	if err != nil {
 		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
 	}
-	return handler.SuccessResponse("")
+	return handler.SuccessResponse("{}")
 }

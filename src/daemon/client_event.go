@@ -31,6 +31,36 @@ func SendPsRequest(command conf.PsCommand) error {
 	return nil
 }
 
+func SendStopRequest(command conf.StopCommand) error {
+	conf.LoadBasicCommand()
+	containers := make([]entity.Container, 0)
+	for _, id := range command.ContainerIds {
+		containers = append(containers, entity.Container{
+			Id:     id,
+			ExitAt: time.Now().UnixMilli(),
+		})
+	}
+	rsp, err := sendRequest[[]entity.Container](constant.Stop, containers)
+	if err != nil {
+		return err
+	}
+	if rsp.Code != constant.UdsStatusOk {
+		return fmt.Errorf(rsp.Msg)
+	}
+	return nil
+}
+
+func SendStopCurrentRequest() error {
+	containers := make([]entity.Container, 0)
+	c := entity.Container{
+		Id:     conf.GlobalConfig.Cmd.Id,
+		ExitAt: time.Now().UnixMilli(),
+	}
+	containers = append(containers, c)
+	_, err := sendRequest(constant.Stop, containers)
+	return err
+}
+
 func SendCommitRequest(commands conf.CommitCommands) error {
 	_, err := sendRequest[conf.CommitCommands](constant.Commit, commands)
 	if err != nil {
@@ -51,15 +81,6 @@ func SendContainerInitRequest(pid int) error {
 	}
 
 	_, err := sendRequest(constant.Run, c)
-	return err
-}
-
-func SendContainerExitRequest() error {
-	c := entity.Container{
-		Id:     conf.GlobalConfig.Cmd.Id,
-		ExitAt: time.Now().UnixMilli(),
-	}
-	_, err := sendRequest(constant.Stop, c)
 	return err
 }
 

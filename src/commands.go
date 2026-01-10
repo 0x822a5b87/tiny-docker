@@ -133,7 +133,7 @@ var commitCommand = cli.Command{
 
 var psCommand = cli.Command{
 	Name:  constant.Ps.String(),
-	Usage: `Create a compression file(.tar) from a daemon`,
+	Usage: `List target containers`,
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:  "a",
@@ -143,5 +143,15 @@ var psCommand = cli.Command{
 	Action: func(context *cli.Context) error {
 		all := context.Bool("a")
 		return daemon.SendPsRequest(conf.PsCommand{All: all})
+	},
+}
+
+var stopCommand = cli.Command{
+	Name:  constant.Stop.String(),
+	Usage: `Stop target container`,
+	Flags: []cli.Flag{},
+	Action: func(context *cli.Context) error {
+		containerIds := context.Args()
+		return daemon.SendStopRequest(conf.StopCommand{ContainerIds: containerIds})
 	},
 }

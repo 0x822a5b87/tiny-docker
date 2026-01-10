@@ -27,6 +27,7 @@ func main() {
 
 		commitCommand,
 		psCommand,
+		stopCommand,
 	}
 
 	app.Before = func(c *cli.Context) error {

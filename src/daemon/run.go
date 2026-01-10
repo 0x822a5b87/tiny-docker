@@ -61,7 +61,7 @@ func RunContainerCmd(commands conf.RunCommands) error {
 			return err
 		}
 		// exit container
-		if err = SendContainerExitRequest(); err != nil {
+		if err = SendStopCurrentRequest(); err != nil {
 			logrus.Error("error send init request: ", err)
 			return err
 		}

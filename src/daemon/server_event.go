@@ -2,8 +2,10 @@ package daemon
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/entity"
@@ -26,12 +28,34 @@ func runContainer(c entity.Container) error {
 	return nil
 }
 
+func stopContainers(containers []entity.Container) error {
+	// TODO it must return a error list
+	var err error
+	for _, container := range containers {
+		err = stopContainer(container)
+		if err != nil {
+			logrus.Errorf("error stop container: %s", container.Id)
+		}
+	}
+	return err
+}
+
 func stopContainer(c entity.Container) error {
 	p := getContainerStatusFilePath(c.Id)
 	preState, err := readContainerState(p)
 	if err != nil {
 		logrus.Errorf("error read pre state: %v", err)
 		return err
+	}
+
+	if preState.Status == entity.ContainerRunning {
+		if err = util.KillProcessByPID(preState.Pid, 9); err != nil {
+			if errors.Is(err, syscall.ESRCH) {
+				logrus.Debugf("process %d does not exist, ignore error", preState.Pid)
+			} else {
+				return err
+			}
+		}
 	}
 
 	preState.Status = entity.ContainerExit

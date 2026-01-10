@@ -29,7 +29,8 @@ func GenPidPath(pid int) string {
 }
 
 func EnsureOpenFilePath(path string) (*os.File, error) {
-	if err := EnsureFilePathExist(path); err != nil {
+	logDir := filepath.Dir(path)
+	if err := EnsureFilePathExist(logDir); err != nil {
 		return nil, err
 	}
 	logFile, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
@@ -68,8 +69,7 @@ func EnsureFileExists(path string) error {
 }
 
 func EnsureFilePathExist(path string) error {
-	logDir := filepath.Dir(path)
-	if err := os.MkdirAll(logDir, 0755); err != nil {
+	if err := os.MkdirAll(path, 0755); err != nil {
 		logrus.Fatal("Failed to create path directory: ", err)
 		return err
 	}

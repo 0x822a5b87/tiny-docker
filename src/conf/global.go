@@ -8,6 +8,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// GlobalConfig NOTE THAT IT CAN ONLY BE USED IN THE CLIENT CONTEXT. ONCE `Start()` IS CALLED,
+// THE SPAWNED PROCESS WILL NOT BE ABLE TO ACCESS THE CONFIG FILE BECAUSE THE FILE SYSTEM HAS BEEN MODIFIED.
 var GlobalConfig Config
 
 func LoadDaemonConfig() {
@@ -55,6 +57,7 @@ func environ() {
 	env = appendEnv(env, RuntimeDockerdUdsFile, GlobalConfig.DockerdUdsFile())
 	env = appendEnv(env, RuntimeDockerdUdsPidFile, GlobalConfig.DockerdUdsPidFile())
 	env = appendEnv(env, RuntimeDockerdLogFile, GlobalConfig.DockerdLogFile())
+	env = appendEnv(env, RuntimeDockerdContainerStatus, GlobalConfig.DockerdContainerStatusPath())
 
 	if GlobalConfig.Cmd.Detach {
 		env = appendEnv(env, DetachMode, "true")

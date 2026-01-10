@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func sendRequest(req *Request) (error, Response) {
+func SendRequest(req *Request) (error, Response) {
 	if !isUdsServerRunning() {
 		logrus.Fatalf("UDS server is not running")
 		return constant.ErrIllegalUdsServerStatus, Response{}

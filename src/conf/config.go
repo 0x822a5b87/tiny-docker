@@ -1,10 +1,18 @@
 package conf
 
 import (
+	"encoding/json"
 	"path/filepath"
 
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 )
+
+type PathType string
+
+var ImagePath PathType = "images"
+var RuntimePath PathType = "runtime"
+var LogPath PathType = "logs"
+var ContainerPath PathType = "container"
 
 type Commands struct {
 	Id       string
@@ -76,50 +84,69 @@ type FsConfig struct {
 	Root string `yaml:"root"`
 }
 
+func (c Config) String() ([]byte, error) {
+	return json.Marshal(c)
+}
+
 func (c Config) ImageName() string {
 	return ExtractNameFromTarPath(c.Cmd.Image)
 }
 
 func (c Config) ReadPath() string {
-	return c.buildSharePath("images", "read")
+	return c.buildSharePath(ImagePath, "read")
 }
 
 func (c Config) WritePath() string {
-	return c.buildIndPath("images", "write", c.Cmd.Id)
+	return c.buildIndPath(ImagePath, "write", c.Cmd.Id)
 }
 
 func (c Config) WorkPath() string {
-	return c.buildIndPath("images", "work", c.Cmd.Id)
+	return c.buildIndPath(ImagePath, "work", c.Cmd.Id)
 }
 
 func (c Config) MergePath() string {
-	return c.buildIndPath("images", "merge", c.Cmd.Id)
+	return c.buildIndPath(ImagePath, "merge", c.Cmd.Id)
 }
 
 func (c Config) DockerdUdsFile() string {
-	return filepath.Join(c.RootPath("runtime"), constant.DockerdUdsConnFile)
+	return c.DockerdPath(RuntimePath, constant.DockerdUdsConnFile)
 }
 
 func (c Config) DockerdUdsPidFile() string {
-	return filepath.Join(c.RootPath("runtime"), constant.DockerdUdsPidFile)
+	return c.DockerdPath(RuntimePath, constant.DockerdUdsPidFile)
 }
 
 func (c Config) DockerdLogFile() string {
-	return filepath.Join(c.RootPath("logs"), constant.DockerdLogFile)
+	return c.DockerdPath(LogPath, constant.DockerdLogFile)
 }
 
-func (c Config) RootPath(pathType string) string {
+func (c Config) DockerdContainerStatusPath() string {
+	return c.DockerdPath(ContainerPath, "")
+}
+
+func (c Config) rootPath() string {
 	root := c.Fs.Root
 	if c.Cmd.Volume != "" {
 		root = c.Cmd.Volume
 	}
-	return filepath.Join(root, pathType, c.ImageName())
+	return filepath.Join(root)
 }
 
-func (c Config) buildSharePath(pathType string, suffix string) string {
-	return filepath.Join(c.RootPath(pathType), suffix)
+func (c Config) DockerdPath(pathType PathType, fileName string) string {
+	if fileName == "" {
+		return filepath.Join(c.rootPath(), string(pathType))
+	}
+	return filepath.Join(c.rootPath(), string(pathType), fileName)
 }
 
-func (c Config) buildIndPath(pathType, suffix string, id string) string {
-	return filepath.Join(c.RootPath(pathType), suffix, id)
+func (c Config) ImagePath(pathType PathType) string {
+	return filepath.Join(c.rootPath(), string(pathType), c.ImageName())
+}
+
+func (c Config) buildSharePath(pathType PathType, suffix string) string {
+	return filepath.Join(c.rootPath(), string(pathType), suffix)
+}
+
+func (c Config) buildIndPath(pathType PathType, suffix string, id string) string {
+	return filepath.Join(c.rootPath(), string(pathType), suffix, id)
 }

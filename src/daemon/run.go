@@ -23,8 +23,12 @@ import (
 func RunContainerCmd(commands conf.RunCommands) error {
 	// NOTE THAT `runContainer` ONLY RUNS IN DAEMON PROCESS.
 	conf.LoadRunConfig(commands)
-	logrus.Infof("run container init config : %v", conf.GlobalConfig)
 	var err error
+	data, err := conf.GlobalConfig.String()
+	if err != nil {
+		return err
+	}
+	logrus.Infof("run container init config : %s", string(data))
 	if err = setupFs(commands.Image); err != nil {
 		logrus.Error(err, "error setup fs.")
 		return err
@@ -42,6 +46,10 @@ func RunContainerCmd(commands conf.RunCommands) error {
 	if !(commands.Tty && !commands.Detach) {
 		if err = parent.Start(); err != nil {
 			logrus.Error("error start process: ", err)
+			return err
+		}
+		if err = SendContainerInitRequest(parent.Process.Pid); err != nil {
+			logrus.Error("error send init request: ", err)
 			return err
 		}
 	}
@@ -217,8 +225,15 @@ func setPty(cmd *exec.Cmd) error {
 	// Start the command with a pty.
 	ptmx, err := pty.Start(cmd)
 	if err != nil {
+		logrus.Errorf("error init ptmx: %v", err)
 		return err
 	}
+
+	if err = SendContainerInitRequest(cmd.Process.Pid); err != nil {
+		logrus.Errorf("send init request error : %s", err.Error())
+		return err
+	}
+
 	// Make sure to close the pty at the end.
 	defer func() { _ = ptmx.Close() }() // Best effort.
 

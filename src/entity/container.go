@@ -1,0 +1,16 @@
+package entity
+
+type ContainerStatus string
+
+var ContainerRunning ContainerStatus = "running"
+var ContainerExit ContainerStatus = "exit"
+
+type Container struct {
+	Id      string          `json:"id"`
+	Pid     int             `json:"pid"`
+	Image   string          `json:"image"`
+	Command string          `json:"command"`
+	Created int64           `json:"created"`
+	Status  ContainerStatus `json:"status"`
+	Name    string          `json:"name"`
+}

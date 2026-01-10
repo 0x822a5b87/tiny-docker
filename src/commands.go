@@ -4,7 +4,6 @@ import (
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/daemon"
-	"github.com/0x822a5b87/tiny-docker/src/handler"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -128,7 +127,7 @@ var commitCommand = cli.Command{
 			Volume:  context.String("v"),
 		}
 
-		return handler.SendCommitRequest(cmd)
+		return daemon.SendCommitRequest(cmd)
 	},
 }
 
@@ -137,6 +136,6 @@ var psCommand = cli.Command{
 	Usage: `Create a compression file(.tar) from a daemon`,
 	Flags: []cli.Flag{},
 	Action: func(context *cli.Context) error {
-		return handler.SendPsRequest()
+		return daemon.SendPsRequest()
 	},
 }

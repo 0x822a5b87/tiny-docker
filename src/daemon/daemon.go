@@ -60,13 +60,25 @@ func configureDaemonProcessTerminalAndDaemonMode(cmd *exec.Cmd, env []string) er
 
 func initContext() {
 	conf.LoadDaemonConfig()
-	ensureContext(conf.RuntimeDockerdUdsFile.Get())
-	ensureContext(conf.RuntimeDockerdUdsPidFile.Get())
-	ensureContext(conf.RuntimeDockerdLogFile.Get())
+	ensureFile(conf.RuntimeDockerdUdsFile.Get())
+	ensureFile(conf.RuntimeDockerdUdsPidFile.Get())
+	ensureFile(conf.RuntimeDockerdLogFile.Get())
+
+	ensurePath(conf.RuntimeDockerdContainerStatus.Get())
+	logrus.Infof("init dockerd uds file: {%s}", conf.RuntimeDockerdUdsFile.Get())
+	logrus.Infof("init dockerd uds pid file: {%s}", conf.RuntimeDockerdUdsPidFile.Get())
+	logrus.Infof("init dockerd log file: {%s}", conf.RuntimeDockerdLogFile.Get())
+	logrus.Infof("init dockerd container path: {%s}", conf.RuntimeDockerdContainerStatus.Get())
 }
 
-func ensureContext(path string) {
+func ensureFile(path string) {
 	if err := util.EnsureFileExists(path); err != nil {
+		panic(err)
+	}
+}
+
+func ensurePath(path string) {
+	if err := util.EnsureFilePathExist(path); err != nil {
 		panic(err)
 	}
 }

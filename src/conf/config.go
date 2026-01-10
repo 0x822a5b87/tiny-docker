@@ -12,6 +12,7 @@ type PathType string
 var ImagePath PathType = "images"
 var RuntimePath PathType = "runtime"
 var LogPath PathType = "logs"
+var StatePath PathType = "state"
 var ContainerPath PathType = "container"
 
 type Commands struct {
@@ -72,6 +73,10 @@ type StopCommand struct {
 	ContainerIds []string
 }
 
+type LogsCommand struct {
+	ContainerId string
+}
+
 type CgroupConfig struct {
 	MemoryLimit string
 	CpuShares   string
@@ -129,6 +134,10 @@ func (c Config) DockerdLogFile() string {
 }
 
 func (c Config) DockerdContainerStatusPath() string {
+	return c.DockerdPath(StatePath, "")
+}
+
+func (c Config) DockerdContainerLogPath() string {
 	return c.DockerdPath(ContainerPath, "")
 }
 

@@ -33,4 +33,5 @@ var (
 	ErrIllegalUdsServerStatus       = Err{ErrorCode: 100010, ErrorText: "Illegal UDS server status: %v"}
 	ErrProcessTerminalAndDaemonMode = Err{ErrorCode: 100011, ErrorText: "Interactive (-it) and detach (-d) modes are mutually exclusive"}
 	ErrExecCommand                  = Err{ErrorCode: 100012, ErrorText: "Execute command error: %v"}
+	ErrMalformedLogsArgs            = Err{ErrorCode: 100013, ErrorText: "Mini-docker requires 1 argument"}
 )

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
@@ -206,9 +207,13 @@ func configureContainerProcessTerminalAndDaemonMode(cmd *exec.Cmd, interactive b
 		// -d: terminal and running as daemon
 		cmd.SysProcAttr.Setctty = false
 		cmd.Stdin = nil
-		nullFile := nullFileWithPanic()
-		cmd.Stdout = nullFile
-		cmd.Stderr = nullFile
+		logFile, err := util.EnsureOpenFilePath(getContainerLogFilePath(conf.GlobalConfig.Cmd.Id))
+		if err != nil {
+			logrus.Errorf("ensure log file error : %s", err.Error())
+			return err
+		}
+		cmd.Stdout = logFile
+		cmd.Stderr = logFile
 	} else if interactive {
 		err := setPty(cmd)
 		if err != nil {
@@ -269,29 +274,9 @@ func setPty(cmd *exec.Cmd) error {
 	return nil
 }
 
-func setTtyMode(cmd *exec.Cmd, tty bool) {
-	cmd.SysProcAttr.Setctty = tty
-	if tty {
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-	} else {
-		nullFile := nullFileWithPanic()
-		cmd.Stdin = nullFile
-		cmd.Stdout = nullFile
-		cmd.Stderr = nullFile
-	}
-}
-
-func setDetachMode(cmd *exec.Cmd, detach bool, tty bool) {
-	if detach {
-		logrus.Infof("Running new process in detach mode.")
-		cmd.SysProcAttr.Setsid = true
-		cmd.SysProcAttr.Setctty = false
-	} else {
-		logrus.Infof("Running new process in attach mode.")
-		cmd.SysProcAttr.Setsid = true
-	}
+func getContainerLogFilePath(id string) string {
+	fileRoot := conf.RuntimeDockerdContainerLog.Get()
+	return filepath.Join(fileRoot, id, constant.ContainerLogFile)
 }
 
 func nullFileWithPanic() *os.File {

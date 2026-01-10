@@ -71,6 +71,16 @@ func stopContainer(c entity.Container) error {
 	return nil
 }
 
+func logs(containerId string) (string, error) {
+	logFile := getContainerLogFilePath(containerId)
+	data, err := os.ReadFile(logFile)
+	if err != nil {
+		logrus.Errorf("error read log file: %v", err)
+		return "", err
+	}
+	return string(data), nil
+}
+
 func ps(command conf.PsCommand) ([]entity.Container, error) {
 	allContainers, err := readAllContainers()
 	if err != nil {

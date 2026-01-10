@@ -155,3 +155,16 @@ var stopCommand = cli.Command{
 		return daemon.SendStopRequest(conf.StopCommand{ContainerIds: containerIds})
 	},
 }
+
+var logsCommand = cli.Command{
+	Name:  constant.Logs.String(),
+	Usage: `Print logs of target container`,
+	Flags: []cli.Flag{},
+	Action: func(context *cli.Context) error {
+		containerIds := context.Args()
+		if len(containerIds) != 1 {
+			return constant.ErrMalformedLogsArgs
+		}
+		return daemon.SendLogRequest(conf.LogsCommand{ContainerId: containerIds[0]})
+	},
+}

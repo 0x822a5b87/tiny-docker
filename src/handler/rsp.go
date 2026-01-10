@@ -47,7 +47,11 @@ func DataFromResponse[T any](rsp Response) (T, error) {
 
 	err := json.Unmarshal(dataBytes, &t)
 	if err != nil {
-		return t, fmt.Errorf("failed to unmarshal to %T: %w, raw data: %s", t, err, string(dataBytes))
+		s, ok := rsp.Data.(T)
+		if !ok {
+			return t, fmt.Errorf("failed to unmarshal to %T: %v, raw data: %s", t, err, string(dataBytes))
+		}
+		return s, nil
 	}
 	return t, nil
 }

@@ -62,6 +62,7 @@ func environ() {
 	env = appendEnv(env, RuntimeDockerdUdsPidFile, GlobalConfig.DockerdUdsPidFile())
 	env = appendEnv(env, RuntimeDockerdLogFile, GlobalConfig.DockerdLogFile())
 	env = appendEnv(env, RuntimeDockerdContainerStatus, GlobalConfig.DockerdContainerStatusPath())
+	env = appendEnv(env, RuntimeDockerdContainerLog, GlobalConfig.DockerdContainerLogPath())
 
 	if GlobalConfig.Cmd.Detach {
 		env = appendEnv(env, DetachMode, "true")

@@ -10,4 +10,5 @@ func init() {
 	handler.AddHandler(constant.Commit, handleCommit)
 	handler.AddHandler(constant.Run, handleContainerRun)
 	handler.AddHandler(constant.Stop, handleContainerStop)
+	handler.AddHandler(constant.Logs, handleContainerLogs)
 }

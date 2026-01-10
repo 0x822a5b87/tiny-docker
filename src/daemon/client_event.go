@@ -84,6 +84,28 @@ func SendContainerInitRequest(pid int) error {
 	return err
 }
 
+func SendLogRequest(command conf.LogsCommand) error {
+	conf.LoadBasicCommand()
+	rsp, err := sendRequest[entity.Container](constant.Logs, entity.Container{Id: command.ContainerId})
+	if err != nil {
+		return err
+	}
+	if rsp.Code != constant.UdsStatusOk {
+		return fmt.Errorf(rsp.Msg)
+	}
+
+	logStr, err := handler.DataFromResponse[string](*rsp)
+	if err != nil {
+		return err
+	}
+	logStr = strings.ReplaceAll(logStr, "\\n", "\n")
+	logStr = strings.ReplaceAll(logStr, `\"`, `"`)
+	logStr = strings.Trim(logStr, `"`)
+	logStr = strings.TrimSpace(logStr)
+	fmt.Println(logStr)
+	return nil
+}
+
 func sendRequest[D any](act constant.Action, data D) (*handler.Response, error) {
 	req, err := handler.ParamsIntoRequest[D](act, data)
 	if err != nil {

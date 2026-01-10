@@ -62,3 +62,17 @@ func handleContainerStop(request handler.Request) (handler.Response, error) {
 	}
 	return handler.SuccessResponse("{}")
 }
+
+func handleContainerLogs(request handler.Request) (handler.Response, error) {
+	container, err := handler.ParamsFromRequest[entity.Container](&request)
+	if err != nil {
+		logrus.Errorf("error parse container stop request: %s", err.Error())
+		return handler.ErrorMessageResponse("error parse container stop request", constant.ErrMalformedUdsReq)
+	}
+
+	data, err := logs(container.Id)
+	if err != nil {
+		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
+	}
+	return handler.SuccessResponse(data)
+}

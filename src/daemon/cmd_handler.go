@@ -33,13 +33,26 @@ func handleCommit(request handler.Request) (handler.Response, error) {
 	return handler.SuccessResponse(""), nil
 }
 
-func handleContainerStatus(request handler.Request) (handler.Response, error) {
+func handleContainerRun(request handler.Request) (handler.Response, error) {
 	c, err := handler.ParamsFromRequest[entity.Container](&request)
 	if err != nil {
-		logrus.Errorf("error parse request: %s\n", err.Error())
+		logrus.Errorf("error parse container run request: %s\n", err.Error())
 		return handler.ErrorMessageResponse("error parse status", constant.ErrMalformedUdsReq)
 	}
-	err = saveContainer(c)
+	err = runContainer(c)
+	if err != nil {
+		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
+	}
+	return handler.SuccessResponse(""), nil
+}
+
+func handleContainerStop(request handler.Request) (handler.Response, error) {
+	c, err := handler.ParamsFromRequest[entity.Container](&request)
+	if err != nil {
+		logrus.Errorf("error parse container stop request: %s", err.Error())
+		return handler.ErrorMessageResponse("error parse container stop request", constant.ErrMalformedUdsReq)
+	}
+	err = stopContainer(c)
 	if err != nil {
 		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
 	}

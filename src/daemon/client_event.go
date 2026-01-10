@@ -23,16 +23,24 @@ func SendCommitRequest(commands conf.CommitCommands) error {
 
 func SendContainerInitRequest(pid int) error {
 	c := entity.Container{
-		Id:      conf.GlobalConfig.Cmd.Id,
-		Pid:     pid,
-		Image:   conf.GlobalConfig.ImageName(),
-		Command: strings.Join(conf.GlobalConfig.Cmd.Args, " "),
-		Created: time.Now().UnixMilli(),
-		Status:  entity.ContainerRunning,
-		Name:    conf.GlobalConfig.ImageName(),
+		Id:        conf.GlobalConfig.Cmd.Id,
+		Pid:       pid,
+		Image:     conf.GlobalConfig.ImageName(),
+		Command:   strings.Join(conf.GlobalConfig.Cmd.Args, " "),
+		CreatedAt: time.Now().UnixMilli(),
+		Status:    entity.ContainerRunning,
+		Name:      conf.GlobalConfig.ImageName(),
 	}
 
 	return sendRequest(constant.Run, c)
+}
+
+func SendContainerExitRequest() error {
+	c := entity.Container{
+		Id:     conf.GlobalConfig.Cmd.Id,
+		ExitAt: time.Now().UnixMilli(),
+	}
+	return sendRequest(constant.Stop, c)
 }
 
 func sendRequest[D any](act constant.Action, data D) error {
@@ -45,6 +53,6 @@ func sendRequest[D any](act constant.Action, data D) error {
 		logrus.Errorf("error sending commit request: %v\n", err)
 		return err
 	}
-	logrus.Infof("%v", rsp)
+	logrus.Infof("receive response: %v", rsp)
 	return nil
 }

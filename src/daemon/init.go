@@ -8,5 +8,6 @@ import (
 func init() {
 	handler.AddHandler(constant.Ps, handlePs)
 	handler.AddHandler(constant.Commit, handleCommit)
-	handler.AddHandler(constant.Run, handleContainerStatus)
+	handler.AddHandler(constant.Run, handleContainerRun)
+	handler.AddHandler(constant.Stop, handleContainerStop)
 }

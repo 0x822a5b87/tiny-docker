@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/sirupsen/logrus"
 )
 
 type Response struct {
@@ -21,6 +22,7 @@ func SuccessResponse(data any) Response {
 }
 
 func ErrorMessageResponse(msg string, wrapErr constant.Err) (Response, error) {
+	logrus.Errorf("error parse request: %s", msg)
 	return ErrorResponse(fmt.Errorf("%s", msg), wrapErr)
 }
 

@@ -60,6 +60,11 @@ func RunContainerCmd(commands conf.RunCommands) error {
 			logrus.Errorf("error wait for container in -it: %v", err)
 			return err
 		}
+		// exit container
+		if err = SendContainerExitRequest(); err != nil {
+			logrus.Error("error send init request: ", err)
+			return err
+		}
 	}
 
 	return nil
@@ -228,14 +233,13 @@ func setPty(cmd *exec.Cmd) error {
 		logrus.Errorf("error init ptmx: %v", err)
 		return err
 	}
+	// Make sure to close the pty at the end.
+	defer func() { _ = ptmx.Close() }() // Best effort.
 
 	if err = SendContainerInitRequest(cmd.Process.Pid); err != nil {
 		logrus.Errorf("send init request error : %s", err.Error())
 		return err
 	}
-
-	// Make sure to close the pty at the end.
-	defer func() { _ = ptmx.Close() }() // Best effort.
 
 	// Handle pty size.
 	ch := make(chan os.Signal, 1)

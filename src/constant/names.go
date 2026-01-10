@@ -2,7 +2,8 @@ package constant
 
 const (
 	CgroupBasePath       = "/sys/fs/cgroup/system.slice"
-	DefaultContainerName = "tiny-docker"
+	CgroupServiceName    = "tiny-docker.service"
+	CgroupSubtreeControl = "cgroup.subtree_control"
 
 	CgroupProcs = "cgroup.procs"
 	CpuMax      = "cpu.max"

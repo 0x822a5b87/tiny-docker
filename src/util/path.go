@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,10 +21,6 @@ func GetExecutableAbsolutePath() (string, error) {
 	}
 
 	return realPath, nil
-}
-
-func GenPidPath(pid int) string {
-	return fmt.Sprintf("%s/%s", constant.CgroupBasePath, constant.DefaultContainerName)
 }
 
 func EnsureOpenFilePath(path string) (*os.File, error) {

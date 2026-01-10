@@ -3,6 +3,7 @@ package manager
 import (
 	"fmt"
 
+	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/cgroup"
@@ -20,7 +21,7 @@ type CgroupManager struct {
 }
 
 func NewCgroupManager(pid int) (*CgroupManager, error) {
-	path := util.GenPidPath(pid)
+	path := util.GenContainerCgroupPath(conf.GlobalConfig.Cmd.Id)
 	fs := NewCgroupFileSystem(path, true)
 	procsSubsystem, err := newSubsystem[*cgroup.ProcsValueSubsystem](fs, constant.CgroupProcs)
 	if err != nil {

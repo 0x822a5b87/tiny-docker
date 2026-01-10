@@ -106,7 +106,7 @@ func (c Config) ImageName() string {
 }
 
 func (c Config) ReadPath() string {
-	return c.buildSharePath(ImagePath, "read")
+	return filepath.Join(c.rootPath(), string(ImagePath), "read", c.ImageName())
 }
 
 func (c Config) WritePath() string {

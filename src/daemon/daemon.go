@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"os"
 	"os/exec"
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
@@ -33,6 +34,8 @@ func newDaemonProcessCmd() (*exec.Cmd, error) {
 	}
 	cmd := exec.Command(execPath, args...)
 	cmd.SysProcAttr = &unix.SysProcAttr{}
+	cmd.Env = os.Environ()
+
 	if err = configureDaemonProcessTerminalAndDaemonMode(cmd, conf.GlobalConfig.InnerEnv); err != nil {
 		return nil, err
 	}

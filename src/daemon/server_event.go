@@ -7,6 +7,7 @@ import (
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/entity"
+	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -46,6 +47,27 @@ func stopContainer(c entity.Container) error {
 	return nil
 }
 
+func ps(command conf.PsCommand) ([]entity.Container, error) {
+	allContainers, err := readAllContainers()
+	if err != nil {
+		logrus.Errorf("error reading all containers: %v", err)
+		return nil, err
+	}
+
+	if command.All {
+		return allContainers, nil
+	}
+
+	targetContainers := make([]entity.Container, 0)
+	for _, container := range allContainers {
+		if container.Status != entity.ContainerRunning {
+			continue
+		}
+		targetContainers = append(targetContainers, container)
+	}
+	return targetContainers, nil
+}
+
 func getContainerStatusFilePath(id string) string {
 	fileRoot := conf.RuntimeDockerdContainerStatus.Get()
 	return filepath.Join(fileRoot, id)
@@ -79,4 +101,24 @@ func writeContainerState(p string, state *entity.Container) error {
 	}
 
 	return nil
+}
+
+func readAllContainers() ([]entity.Container, error) {
+	p := conf.RuntimeDockerdContainerStatus.Get()
+	containerData, err := util.ReadAllFilesInDir(p)
+	if err != nil {
+		logrus.Errorf("error read all containers : %v", err)
+		return nil, err
+	}
+
+	containers := make([]entity.Container, 0)
+	for _, data := range containerData {
+		var container entity.Container
+		if err = json.Unmarshal(data, &container); err != nil {
+			logrus.Errorf("error unmarshal container : %v", err)
+			continue
+		}
+		containers = append(containers, container)
+	}
+	return containers, nil
 }

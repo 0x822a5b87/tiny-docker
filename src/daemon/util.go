@@ -6,6 +6,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func formatEventOutput() {
+
+}
+
 // setupUnionFsFromEnv init read-layer, write-layer, work-layer, merge-layer for daemon
 func setupUnionFsFromEnv() error {
 	readPath := conf.FsReadLayerPath.Get()

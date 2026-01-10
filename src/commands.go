@@ -134,8 +134,14 @@ var commitCommand = cli.Command{
 var psCommand = cli.Command{
 	Name:  constant.Ps.String(),
 	Usage: `Create a compression file(.tar) from a daemon`,
-	Flags: []cli.Flag{},
+	Flags: []cli.Flag{
+		&cli.BoolFlag{
+			Name:  "a",
+			Usage: "Show all containers",
+		},
+	},
 	Action: func(context *cli.Context) error {
-		return daemon.SendPsRequest()
+		all := context.Bool("a")
+		return daemon.SendPsRequest(conf.PsCommand{All: all})
 	},
 }

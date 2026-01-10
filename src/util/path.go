@@ -54,6 +54,7 @@ func EnsureFileExists(path string) error {
 			file, createErr := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0644)
 			if createErr != nil {
 				logrus.Errorf("Failed to create file %s: %v", path, createErr)
+				panic(err)
 				return createErr
 			}
 			if closeErr := file.Close(); closeErr != nil {

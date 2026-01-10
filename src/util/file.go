@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -9,6 +10,47 @@ import (
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/sirupsen/logrus"
 )
+
+func ReadAllFilesInDir(dirPath string) (map[string][]byte, error) {
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		logrus.Errorf("directory does not exist: %s", dirPath)
+		return nil, err
+	} else if err != nil {
+		logrus.Errorf("failed to stat directory: %s, err: %v", dirPath, err)
+		return nil, err
+	}
+
+	fileContents := make(map[string][]byte)
+
+	err := filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			logrus.Warnf("skip file %s, walk error: %v", path, err)
+			return nil
+		}
+
+		if d.Type().IsRegular() {
+			content, readErr := os.ReadFile(path)
+			if readErr != nil {
+				logrus.Errorf("failed to read file %s, err: %v", path, readErr)
+				return nil
+			}
+			filename := filepath.Base(path)
+			fileContents[filename] = content
+			logrus.Debugf("successfully read file: %s", path)
+		} else {
+			logrus.Warnf("skip file %s, walk error: %v", path, err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		logrus.Errorf("failed to walk directory %s, err: %v", dirPath, err)
+		return nil, err
+	}
+
+	return fileContents, nil
+}
 
 func GetFdRealPath(f *os.File) (string, error) {
 	if f == nil {

@@ -8,13 +8,15 @@ import (
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/entity"
 	"github.com/0x822a5b87/tiny-docker/src/handler"
+	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
 
 // NOTE THAT ALL CLIENT EVENT CAN ONLY BE INVOKED IN CLIENT
 
-func SendPsRequest() error {
-	return sendRequest(constant.Commit, "")
+func SendPsRequest(command conf.PsCommand) error {
+	conf.LoadBasicCommand()
+	return sendRequest(constant.Ps, command)
 }
 
 func SendCommitRequest(commands conf.CommitCommands) error {
@@ -53,6 +55,6 @@ func sendRequest[D any](act constant.Action, data D) error {
 		logrus.Errorf("error sending commit request: %v\n", err)
 		return err
 	}
-	logrus.Infof("receive response: %v", rsp)
+	util.LogWithoutExtraInfo(rsp)
 	return nil
 }

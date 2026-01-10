@@ -50,15 +50,6 @@ func CreateUdsServer() error {
 		return err
 	}
 
-	{
-		// TODO delete me
-		file, err := os.Open(pidFile)
-		if err != nil {
-			panic(err)
-		}
-		defer file.Close()
-	}
-
 	if err = os.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0600); err != nil {
 		logrus.Errorf("error write file : %v", pidFile)
 		return err

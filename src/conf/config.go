@@ -64,6 +64,10 @@ func (c CommitCommands) IntoCommands() Commands {
 	}
 }
 
+type PsCommand struct {
+	All bool
+}
+
 type CgroupConfig struct {
 	MemoryLimit string
 	CpuShares   string

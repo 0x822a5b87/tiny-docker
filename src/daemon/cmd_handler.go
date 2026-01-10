@@ -1,6 +1,8 @@
 package daemon
 
 import (
+	"encoding/json"
+
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/entity"
@@ -9,21 +11,31 @@ import (
 )
 
 func handlePs(request handler.Request) (handler.Response, error) {
-	// TODO implement real query.
-	return handler.Response{
-		Code: 0,
-		Msg:  "success",
-		Data: []map[string]interface{}{
-			{"id": "abc123", "pid": 12345, "status": "running"},
-			{"id": "def456", "pid": 67890, "status": "exited"},
-		},
-	}, nil
+	command, err := handler.ParamsFromRequest[conf.PsCommand](&request)
+	if err != nil {
+		logrus.Errorf("error parse request: %s", err.Error())
+		return handler.ErrorMessageResponse("type convert error", constant.ErrMalformedUdsReq)
+	}
+
+	containers, err := ps(command)
+	if err != nil {
+		logrus.Errorf("error parse request: %s", err.Error())
+		return handler.ErrorMessageResponse(err.Error(), constant.ErrExecCommand)
+	}
+
+	data, err := json.Marshal(containers)
+	if err != nil {
+		logrus.Errorf("error marshal containers: %s", err.Error())
+		return handler.ErrorMessageResponse(err.Error(), constant.ErrExecCommand)
+	}
+
+	return handler.SuccessResponse(string(data)), nil
 }
 
 func handleCommit(request handler.Request) (handler.Response, error) {
 	commands, err := handler.ParamsFromRequest[conf.CommitCommands](&request)
 	if err != nil {
-		logrus.Errorf("error parse request: %s\n", err.Error())
+		logrus.Errorf("error parse request: %s", err.Error())
 		return handler.ErrorMessageResponse("type convert error", constant.ErrMalformedUdsReq)
 	}
 	err = Commit(commands)
@@ -36,7 +48,7 @@ func handleCommit(request handler.Request) (handler.Response, error) {
 func handleContainerRun(request handler.Request) (handler.Response, error) {
 	c, err := handler.ParamsFromRequest[entity.Container](&request)
 	if err != nil {
-		logrus.Errorf("error parse container run request: %s\n", err.Error())
+		logrus.Errorf("error parse container run request: %s", err.Error())
 		return handler.ErrorMessageResponse("error parse status", constant.ErrMalformedUdsReq)
 	}
 	err = runContainer(c)

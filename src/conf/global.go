@@ -24,6 +24,10 @@ func LoadCommitConfig(cmd CommitCommands) {
 	loadConfig(cmd.IntoCommands())
 }
 
+func LoadBasicCommand() {
+	loadConfig(Commands{})
+}
+
 func loadConfig(commands Commands) {
 	loadFile()
 	GlobalConfig.Cmd = commands

@@ -26,9 +26,6 @@ func formatContainerTable(containers []entity.Container) string {
 
 	for _, c := range containers {
 		shortID := c.Id
-		if len(shortID) > 12 {
-			shortID = shortID[:12]
-		}
 
 		formattedCmd := fmt.Sprintf("\"%s\"", c.Command)
 

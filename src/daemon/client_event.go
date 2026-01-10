@@ -1,6 +1,7 @@
 package daemon
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -8,7 +9,6 @@ import (
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/entity"
 	"github.com/0x822a5b87/tiny-docker/src/handler"
-	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
 
@@ -16,11 +16,27 @@ import (
 
 func SendPsRequest(command conf.PsCommand) error {
 	conf.LoadBasicCommand()
-	return sendRequest(constant.Ps, command)
+	rsp, err := sendRequest[conf.PsCommand](constant.Ps, command)
+	if err != nil {
+		return err
+	}
+	if rsp.Code != constant.UdsStatusOk {
+		return fmt.Errorf(rsp.Msg)
+	}
+	data, err := handler.DataFromResponse[[]entity.Container](*rsp)
+	if err != nil {
+		return err
+	}
+	formatContainerTable(data)
+	return nil
 }
 
 func SendCommitRequest(commands conf.CommitCommands) error {
-	return sendRequest[conf.CommitCommands](constant.Commit, commands)
+	_, err := sendRequest[conf.CommitCommands](constant.Commit, commands)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func SendContainerInitRequest(pid int) error {
@@ -34,7 +50,8 @@ func SendContainerInitRequest(pid int) error {
 		Name:      conf.GlobalConfig.ImageName(),
 	}
 
-	return sendRequest(constant.Run, c)
+	_, err := sendRequest(constant.Run, c)
+	return err
 }
 
 func SendContainerExitRequest() error {
@@ -42,19 +59,19 @@ func SendContainerExitRequest() error {
 		Id:     conf.GlobalConfig.Cmd.Id,
 		ExitAt: time.Now().UnixMilli(),
 	}
-	return sendRequest(constant.Stop, c)
+	_, err := sendRequest(constant.Stop, c)
+	return err
 }
 
-func sendRequest[D any](act constant.Action, data D) error {
+func sendRequest[D any](act constant.Action, data D) (*handler.Response, error) {
 	req, err := handler.ParamsIntoRequest[D](act, data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err, rsp := handler.SendRequest(req)
 	if err != nil {
 		logrus.Errorf("error sending commit request: %v\n", err)
-		return err
+		return nil, err
 	}
-	util.LogWithoutExtraInfo(rsp)
-	return nil
+	return &rsp, nil
 }

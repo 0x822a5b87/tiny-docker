@@ -37,8 +37,6 @@ func ReadAllFilesInDir(dirPath string) (map[string][]byte, error) {
 			filename := filepath.Base(path)
 			fileContents[filename] = content
 			logrus.Debugf("successfully read file: %s", path)
-		} else {
-			logrus.Warnf("skip file %s, walk error: %v", path, err)
 		}
 
 		return nil

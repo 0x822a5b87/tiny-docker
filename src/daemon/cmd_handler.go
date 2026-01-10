@@ -1,8 +1,6 @@
 package daemon
 
 import (
-	"encoding/json"
-
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/entity"
@@ -23,13 +21,7 @@ func handlePs(request handler.Request) (handler.Response, error) {
 		return handler.ErrorMessageResponse(err.Error(), constant.ErrExecCommand)
 	}
 
-	data, err := json.Marshal(containers)
-	if err != nil {
-		logrus.Errorf("error marshal containers: %s", err.Error())
-		return handler.ErrorMessageResponse(err.Error(), constant.ErrExecCommand)
-	}
-
-	return handler.SuccessResponse(string(data)), nil
+	return handler.SuccessResponse(containers)
 }
 
 func handleCommit(request handler.Request) (handler.Response, error) {
@@ -42,7 +34,7 @@ func handleCommit(request handler.Request) (handler.Response, error) {
 	if err != nil {
 		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
 	}
-	return handler.SuccessResponse(""), nil
+	return handler.SuccessResponse("")
 }
 
 func handleContainerRun(request handler.Request) (handler.Response, error) {
@@ -55,7 +47,7 @@ func handleContainerRun(request handler.Request) (handler.Response, error) {
 	if err != nil {
 		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
 	}
-	return handler.SuccessResponse(""), nil
+	return handler.SuccessResponse("")
 }
 
 func handleContainerStop(request handler.Request) (handler.Response, error) {
@@ -68,5 +60,5 @@ func handleContainerStop(request handler.Request) (handler.Response, error) {
 	if err != nil {
 		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
 	}
-	return handler.SuccessResponse(""), nil
+	return handler.SuccessResponse("")
 }

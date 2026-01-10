@@ -15,3 +15,10 @@ type Container struct {
 	Status    ContainerStatus `json:"status"`
 	Name      string          `json:"name"`
 }
+
+// WaitRequest this request is used to indicate that a detached process is running, and
+// requires the daemon process to wait for it.
+type WaitRequest struct {
+	Id  string `json:"id"`
+	Pid int    `json:"pid"`
+}

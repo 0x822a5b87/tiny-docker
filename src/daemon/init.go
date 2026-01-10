@@ -11,4 +11,5 @@ func init() {
 	handler.AddHandler(constant.Run, handleContainerRun)
 	handler.AddHandler(constant.Stop, handleContainerStop)
 	handler.AddHandler(constant.Logs, handleContainerLogs)
+	handler.AddHandler(constant.Wait, handleWaitContainer)
 }

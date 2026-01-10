@@ -11,6 +11,7 @@ import (
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/entity"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/cpu"
 	"github.com/0x822a5b87/tiny-docker/src/subsystem/manager"
@@ -55,6 +56,17 @@ func RunContainerCmd(commands conf.RunCommands) error {
 		}
 	}
 
+	if commands.Detach {
+		err = SendWaitRequest(entity.WaitRequest{
+			Id:  conf.GlobalConfig.Cmd.Id,
+			Pid: parent.Process.Pid,
+		})
+		if err != nil {
+			logrus.Errorf("send wait request error : %s", err.Error())
+			return err
+		}
+	}
+
 	if commands.Tty && !commands.Detach {
 		err = parent.Wait()
 		if err != nil {
@@ -63,7 +75,7 @@ func RunContainerCmd(commands conf.RunCommands) error {
 		}
 		// exit container
 		if err = SendStopCurrentRequest(); err != nil {
-			logrus.Error("error send init request: ", err)
+			logrus.Error("error send stop request: ", err)
 			return err
 		}
 	}

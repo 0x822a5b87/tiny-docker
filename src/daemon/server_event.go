@@ -5,13 +5,17 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sync"
 	"syscall"
+	"time"
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/entity"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 )
+
+var mu sync.Mutex
 
 func runContainer(c entity.Container) error {
 	data, err := json.Marshal(c)
@@ -32,7 +36,7 @@ func stopContainers(containers []entity.Container) error {
 	// TODO it must return a error list
 	var err error
 	for _, container := range containers {
-		err = stopContainer(container)
+		err = stopContainer(container.Id)
 		if err != nil {
 			logrus.Errorf("error stop container: %s", container.Id)
 		}
@@ -40,8 +44,10 @@ func stopContainers(containers []entity.Container) error {
 	return err
 }
 
-func stopContainer(c entity.Container) error {
-	p := getContainerStatusFilePath(c.Id)
+func stopContainer(id string) error {
+	mu.Lock()
+	defer mu.Unlock()
+	p := getContainerStatusFilePath(id)
 	preState, err := readContainerState(p)
 	if err != nil {
 		logrus.Errorf("error read pre state: %v", err)
@@ -59,7 +65,7 @@ func stopContainer(c entity.Container) error {
 	}
 
 	preState.Status = entity.ContainerExit
-	preState.ExitAt = c.ExitAt
+	preState.ExitAt = time.Now().UnixMilli()
 
 	err = writeContainerState(p, preState)
 	if err != nil {
@@ -79,6 +85,49 @@ func logs(containerId string) (string, error) {
 		return "", err
 	}
 	return string(data), nil
+}
+
+func wait(request entity.WaitRequest) {
+	pollInterval := 1 * time.Second
+	for {
+		if err := syscall.Kill(request.Pid, 0); err != nil {
+			// There is no need to worry about multiple stop operations, as the stop function
+			// includes a mutex lock and status check internally.
+			err = stopContainer(request.Id)
+			if err != nil {
+				logrus.Errorf("error stop container in wait: %s", request.Id)
+			} else {
+				logrus.Infof("detach process is exited.")
+			}
+			return
+		}
+
+		time.Sleep(pollInterval)
+	}
+}
+
+// strictWait a more strict version for wait
+func strictWait(request entity.WaitRequest) {
+	pollInterval := 1 * time.Second
+	for {
+		var waitStatus syscall.WaitStatus
+		_, err := syscall.Wait4(request.Pid, &waitStatus, syscall.WNOHANG|syscall.WEXITED, nil)
+
+		isProcessExit := func(status syscall.WaitStatus) bool { return status.Exited() }
+		isProcessEsrch := func(err error) bool { return err != nil && errors.Is(err, syscall.ESRCH) }
+
+		if isProcessExit(waitStatus) || isProcessEsrch(err) {
+			err = stopContainer(request.Id)
+			if err != nil {
+				logrus.Errorf("error stop container in wait: %s", request.Id)
+			} else {
+				logrus.Infof("detach process is exited.")
+			}
+			return
+		}
+
+		time.Sleep(pollInterval)
+	}
 }
 
 func ps(command conf.PsCommand) ([]entity.Container, error) {

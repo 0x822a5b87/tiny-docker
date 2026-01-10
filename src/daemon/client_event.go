@@ -106,6 +106,11 @@ func SendLogRequest(command conf.LogsCommand) error {
 	return nil
 }
 
+func SendWaitRequest(request entity.WaitRequest) error {
+	_, err := sendRequest(constant.Wait, request)
+	return err
+}
+
 func sendRequest[D any](act constant.Action, data D) (*handler.Response, error) {
 	req, err := handler.ParamsIntoRequest[D](act, data)
 	if err != nil {

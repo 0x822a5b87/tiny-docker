@@ -20,7 +20,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if err = syscall.Exec(path, []string{command, "-t", pid, "-a", "/bin/bash"}, syscall.Environ()); err != nil {
+	if err = syscall.Exec(path, []string{command, "-t", pid, "-a", "cat", "data"}, syscall.Environ()); err != nil {
 		panic(err)
 	}
 }

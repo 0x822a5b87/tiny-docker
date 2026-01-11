@@ -62,6 +62,7 @@ func SendStopCurrentRequest() error {
 }
 
 func SendCommitRequest(commands conf.CommitCommands) error {
+	conf.LoadCommitConfig(commands)
 	_, err := sendRequest[conf.CommitCommands](constant.Commit, commands)
 	if err != nil {
 		return err

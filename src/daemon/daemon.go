@@ -34,9 +34,11 @@ func newDaemonProcessCmd() (*exec.Cmd, error) {
 	}
 	cmd := exec.Command(execPath, args...)
 	cmd.SysProcAttr = &unix.SysProcAttr{}
-	cmd.Env = os.Environ()
 
-	if err = configureDaemonProcessTerminalAndDaemonMode(cmd, conf.GlobalConfig.InnerEnv); err != nil {
+	env := os.Environ()
+	env = append(env, conf.GlobalConfig.InnerEnv...)
+
+	if err = configureDaemonProcessTerminalAndDaemonMode(cmd, env); err != nil {
 		return nil, err
 	}
 

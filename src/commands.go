@@ -109,7 +109,7 @@ var commitCommand = cli.Command{
 	Flags: []cli.Flag{
 		&cli.StringSliceFlag{
 			Name:  "s",
-			Usage: "Name of daemon to commit",
+			Usage: "Id of daemon to commit",
 		},
 		&cli.StringSliceFlag{
 			Name:  "t",

@@ -68,8 +68,12 @@ func NullFile() (*os.File, error) {
 }
 
 func Tar(dstFile string, srcPath string) error {
-	data, err := exec.Command("tar", "-cvf", dstFile, "-C", srcPath, ".").CombinedOutput()
-	logrus.Debug(string(data))
+	path, err := exec.LookPath("tar")
+	if err != nil {
+		logrus.Errorf("error lok path for tar.")
+		return err
+	}
+	data, err := exec.Command(path, "-cvf", dstFile, "-C", srcPath, ".").CombinedOutput()
 	if err != nil {
 		logrus.Errorf("tar error: {%s}", err.Error())
 		logrus.Errorf("tar error: dst = {%s}, src = {%s}, error = {%s}", dstFile, srcPath, err.Error())

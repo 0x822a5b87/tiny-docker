@@ -14,5 +14,6 @@ const Stop Action = "stop"
 const Ps Action = "ps"
 const Commit Action = "commit"
 const Logs Action = "logs"
+const Exec Action = "exec"
 
 const Wait Action = "__wait_request__"

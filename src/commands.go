@@ -168,3 +168,21 @@ var logsCommand = cli.Command{
 		return daemon.SendLogRequest(conf.LogsCommand{ContainerId: containerIds[0]})
 	},
 }
+
+var execCommand = cli.Command{
+	Name:  constant.Exec.String(),
+	Usage: `Execute a command in a running container`,
+	Flags: []cli.Flag{
+		cli.BoolFlag{
+			Name:  "it",
+			Usage: "enable tty",
+		},
+	},
+	Action: func(context *cli.Context) error {
+		command, err := util.GetExecArgs(context)
+		if err != nil {
+			return err
+		}
+		return daemon.Exec(command)
+	},
+}

@@ -51,6 +51,12 @@ func (r RunCommands) IntoCommands() Commands {
 	}
 }
 
+type ExecCommand struct {
+	Interactive bool
+	Id          string
+	Args        []string
+}
+
 type CommitCommands struct {
 	SrcName string
 	DstName string

@@ -3,6 +3,10 @@
 >
 > It is built on Go 1.23.4, allowing us to leverage more modern language features that simplify this lightweight project.
 
+
+https://github.com/user-attachments/assets/180a38ca-d723-49d7-bd02-bd6fb5052f72
+
+
 # description
 
 

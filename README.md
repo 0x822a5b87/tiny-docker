@@ -18,6 +18,7 @@ kanban
   [Not Support]
     [Pull/Commit an actual image file from docker-hub]
     [containerd/runc/containerd-shim]
+    [cgroup setting for exec]
 ```
 
 # references

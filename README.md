@@ -1,7 +1,10 @@
 # tiny-docker
+
 > `tiny-docker` is a **toy container engine** that mocks Docker, built from scratch to replicate the core functionality of Docker in a lightweight form factor. 
 >
 > It is built on Go 1.23.4, allowing us to leverage more modern language features that simplify this lightweight project.
+> 
+> Check out the entire development process in this article: [Build My Own Docker From Scratch](https://0x822a5b87.github.io/2025/12/18/build-my-own-docker-from-scratch/).
 
 # description
 

@@ -402,6 +402,51 @@ flowchart TB
     classDef yellow fill:#FFF9C4,color:#000000;
 ```
 
+## network
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant MiniDocker as mini-docker
+    participant Kernel as Linux内核
+    participant Storage as 本地存储(如local-kv.db)
+    participant Container as 容器(NetNS)
+
+    Note over User,MiniDocker: 阶段1: 创建子网网络(docker network create)
+    User->>MiniDocker: 执行 network create --driver bridge <network-name>
+    MiniDocker->>Kernel: 1. 扫描宿主机网络设备/路由表
+    Kernel-->>MiniDocker: 返回已占用网段列表
+    MiniDocker->>MiniDocker: 2. 从RFC1918私有网段中选择未占用Subnet
+    MiniDocker->>Kernel: 3. 创建Linux Bridge设备(如my-bridge)
+    Kernel-->>MiniDocker: Bridge创建成功
+    MiniDocker->>Kernel: 4. 为Bridge分配Subnet网关IP(如10.200.0.1/16)
+    Kernel-->>MiniDocker: 网关IP绑定成功
+    MiniDocker->>Storage: 5. 存储网络元数据(名称/Subnet/网关/模式)
+    Storage-->>MiniDocker: 元数据存储完成
+    MiniDocker-->>User: 网络创建成功，返回网络信息
+
+    Note over User,MiniDocker: 阶段2: 启动容器并绑定网络(docker run --network)
+    User->>MiniDocker: 执行 run --network <network-name> <image>
+    MiniDocker->>Storage: 1. 查询目标网络的Subnet/网关/Bridge信息
+    Storage-->>MiniDocker: 返回网络元数据
+    MiniDocker->>MiniDocker: 2. 从Subnet中分配空闲IP(如10.200.0.2/16)
+    MiniDocker->>Kernel: 3. 创建容器NetNS + 启动容器
+    Kernel-->>MiniDocker: 容器NetNS创建成功，容器启动完成
+    MiniDocker->>Kernel: 4. 创建Veth Pair(veth-host <-> veth-ns)
+    Kernel-->>MiniDocker: Veth Pair创建成功
+    MiniDocker->>Kernel: 5. 将veth-ns移入容器NetNS
+    Kernel-->>MiniDocker: veth-ns移入完成
+    MiniDocker->>Kernel: 6. 将veth-host绑定为Bridge的slave设备
+    Kernel-->>MiniDocker: veth-host绑定Bridge成功
+    MiniDocker->>Container: 7. 为容器内veth-ns分配IP(同子网独立地址)
+    Container-->>MiniDocker: veth-ns IP配置完成
+    MiniDocker->>Kernel: 8. 启动Bridge/veth-host/veth-ns设备
+    Kernel-->>MiniDocker: 所有网络设备UP成功
+    MiniDocker-->>User: 容器启动成功，网络绑定完成
+```
+
+
+
 # references
 
 - [A workshop on Linux containers: Rebuild Docker from Scratch](https://github.com/Fewbytes/rubber-docker/tree/master)

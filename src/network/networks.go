@@ -15,9 +15,13 @@ func NewNetworks() (*Networks, error) {
 	if err != nil {
 		return nil, err
 	}
+	networkStore, err := NewFileNetworkStore()
+	if err != nil {
+		return nil, err
+	}
 	return &Networks{
 		Mutex:              sync.Mutex{},
-		networkStore:       NewInMemoryNetworkStore(),
+		networkStore:       networkStore,
 		endpointStore:      NewInMemoryEndpointStore(),
 		ipamStore:          NewInMemoryIPAMStore(),
 		networkDriver:      &BridgeDriver{},
@@ -66,6 +70,12 @@ func (n *Networks) DeleteNetwork(id entity.NetworkId) error {
 	if len(endpoints) > 0 {
 		return constant.ErrDeviceIsBusy
 	}
+
+	if err = n.networkStore.Delete(id); err != nil {
+		logrus.Errorf("error deleting network: %s", err)
+		return err
+	}
+
 	return util.DeleteDevice(nw.Name)
 }
 

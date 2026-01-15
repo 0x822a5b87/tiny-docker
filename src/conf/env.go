@@ -52,3 +52,6 @@ const RuntimeDockerdUdsPidFile EnvVariable = "tiny-docker-runtime-dockerd-pid-fi
 const RuntimeDockerdLogFile EnvVariable = "tiny-docker-runtime-dockerd-log-file"
 const RuntimeDockerdContainerStatus EnvVariable = "tiny-docker-runtime-dockerd-container-status"
 const RuntimeDockerdContainerLog EnvVariable = "tiny-docker-runtime-dockerd-container-log"
+
+const RuntimeNetworkPath EnvVariable = "tiny-docker-runtime-dockerd-network"
+const RuntimeEndpointPath EnvVariable = "tiny-docker-runtime-dockerd-endpoint"

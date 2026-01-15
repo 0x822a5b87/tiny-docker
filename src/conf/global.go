@@ -31,7 +31,7 @@ func LoadBasicCommand() {
 func loadConfig(commands Commands) {
 	loadFile()
 	GlobalConfig.Cmd = commands
-	environ()
+	Environ()
 }
 
 func loadFile() {
@@ -48,7 +48,7 @@ func loadFile() {
 	}
 }
 
-func environ() {
+func Environ() {
 	env := make([]string, 0)
 	env = appendEnv(env, MetaName, GlobalConfig.Meta.Name)
 	env = appendEnv(env, FsBasePath, GlobalConfig.Fs.Root)
@@ -63,6 +63,9 @@ func environ() {
 	env = appendEnv(env, RuntimeDockerdLogFile, GlobalConfig.DockerdLogFile())
 	env = appendEnv(env, RuntimeDockerdContainerStatus, GlobalConfig.DockerdContainerStatusPath())
 	env = appendEnv(env, RuntimeDockerdContainerLog, GlobalConfig.DockerdContainerLogPath())
+
+	env = appendEnv(env, RuntimeNetworkPath, GlobalConfig.DockerdNetworkPath())
+	env = appendEnv(env, RuntimeEndpointPath, GlobalConfig.DockerdEndpointPath())
 
 	if GlobalConfig.Cmd.Detach {
 		env = appendEnv(env, DetachMode, "true")

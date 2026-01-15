@@ -15,6 +15,10 @@ var LogPath PathType = "logs"
 var StatePath PathType = "state"
 var ContainerPath PathType = "container"
 
+var NetworksPath PathType = "networks"
+var NetworkPath PathType = "network"
+var EndpointPath PathType = "endpoint"
+
 type Commands struct {
 	Id       string
 	Tty      bool
@@ -135,6 +139,14 @@ func (c Config) DockerdUdsPidFile() string {
 	return c.DockerdPath(RuntimePath, constant.DockerdUdsPidFile)
 }
 
+func (c Config) DockerdNetworkPath() string {
+	return c.DockerdPath(NetworksPath, string(NetworkPath))
+}
+
+func (c Config) DockerdEndpointPath() string {
+	return c.DockerdPath(NetworksPath, string(EndpointPath))
+}
+
 func (c Config) DockerdLogFile() string {
 	return c.DockerdPath(LogPath, constant.DockerdLogFile)
 }
@@ -153,6 +165,10 @@ func (c Config) rootPath() string {
 		root = c.Cmd.Volume
 	}
 	return filepath.Join(root)
+}
+
+func (c Config) Net(pathType PathType) string {
+	return filepath.Join(c.rootPath(), string(pathType), c.ImageName())
 }
 
 func (c Config) DockerdPath(pathType PathType, fileName string) string {

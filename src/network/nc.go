@@ -20,6 +20,11 @@ type NetworkDriver interface {
 type BridgeDriver struct{}
 
 func (driver *BridgeDriver) Create(name string, subnet *net.IPNet) (*entity.Network, error) {
+	if _, err := util.CheckSubnetGatewayAvailable(subnet); err != nil {
+		logrus.Errorf("subnet gateway not available: %v", err)
+		return nil, err
+	}
+
 	if err := util.CreateBridge(name); err != nil {
 		logrus.Errorf("error create bridge : %s, err : %s", name, err)
 		return nil, err

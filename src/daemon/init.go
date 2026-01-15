@@ -11,6 +11,21 @@ import (
 var networks *network.Networks
 
 func init() {
+	addAllHandler()
+	initNetwork()
+}
+
+func initNetwork() {
+	conf.LoadBasicCommand()
+	var err error
+	networks, err = network.NewNetworks()
+	if err != nil {
+		logrus.Errorf("error creating networks: %v", err)
+		panic(err)
+	}
+}
+
+func addAllHandler() {
 	handler.AddHandler(constant.Ps, handlePs)
 	handler.AddHandler(constant.Commit, handleCommit)
 	handler.AddHandler(constant.Run, handleContainerRun)
@@ -23,11 +38,4 @@ func init() {
 	handler.AddHandler(constant.NetworkInspect, handleNetworkInspect)
 	handler.AddHandler(constant.NetworkConnect, handleNetworkCreate)
 
-	conf.LoadBasicCommand()
-	var err error
-	networks, err = network.NewNetworks()
-	if err != nil {
-		logrus.Errorf("error creating networks: %v", err)
-		panic(err)
-	}
 }

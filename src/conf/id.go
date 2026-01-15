@@ -14,6 +14,13 @@ func GenContainerID() (fullID, shortID string) {
 	return
 }
 
+func GenUUID() (fullID, shortID string) {
+	u := uuid.New()
+	fullID = strings.ReplaceAll(u.String(), "-", "")
+	shortID = fullID[:12]
+	return
+}
+
 func ExtractNameFromTarPath(tarPath string) string {
 	filename := filepath.Base(tarPath)
 

@@ -30,21 +30,32 @@ func (driver *BridgeDriver) Create(name string, subnet *net.IPNet) (*entity.Netw
 		return nil, err
 	}
 
+	gateway, err := util.GetGateway(subnet)
+	if err != nil {
+		return nil, err
+	}
+
 	id, _ := conf.GenUUID()
 	network := &entity.Network{
 		Id:      entity.NetworkId(id),
 		Name:    name,
 		Type:    entity.NetworkBridge,
 		IPNet:   subnet,
-		Gateway: subnet.IP,
+		Gateway: gateway,
 	}
 
-	if err := util.SetBridgeIP(name, subnet.String()); err != nil {
+	gateway, err = util.GetGateway(subnet)
+	if err != nil {
+		logrus.Errorf("error get gateway : %s, err : %s", gateway, err)
+		return nil, err
+	}
+
+	if err = util.SetBridgeIP(name, gateway.String()); err != nil {
 		logrus.Errorf("error set bridge ip : %s", err)
 		return nil, err
 	}
 
-	if err := util.SetupLinkByName(name); err != nil {
+	if err = util.SetupLinkByName(name); err != nil {
 		logrus.Errorf("error setup bridge ip : %s", err)
 		return nil, err
 	}
@@ -68,23 +79,34 @@ func (driver *BridgeDriver) Disconnect(network *entity.Network, endpoint *entity
 }
 
 type IPAM interface {
-	AllocateIP() (*net.IP, error)
-	ReleaseIP(*net.IP)
+	AllocateIP() (*net.IPNet, error)
+	ReleaseIP(*net.IPNet) error
 }
 
-type IPAMImpl struct {
-	AvailableIps []*net.IP `json:"available_ips"`
+func NewBitmapIPAM(subnet *net.IPNet, bitmap *Bitmap) (*BitmapIPAM, error) {
+	return &BitmapIPAM{
+		Subnet: subnet,
+		Bitmap: bitmap,
+	}, nil
 }
 
-func (ipam *IPAMImpl) AllocateIP() (*net.IP, error) {
-	if len(ipam.AvailableIps) == 0 {
+type BitmapIPAM struct {
+	Subnet *net.IPNet `json:"subnet"`
+	Bitmap *Bitmap    `json:"bitmap"`
+}
+
+func (ipam *BitmapIPAM) AllocateIP() (*net.IPNet, error) {
+	pos := ipam.Bitmap.FindFirstUnset()
+	if pos < 0 {
 		return nil, constant.ErrResourcePoolIsEmpty
 	}
-	ip := ipam.AvailableIps[len(ipam.AvailableIps)-1]
-	ipam.AvailableIps = ipam.AvailableIps[:len(ipam.AvailableIps)-1]
-	return ip, nil
+	return util.GetNthIp(ipam.Subnet, pos)
 }
 
-func (ipam *IPAMImpl) ReleaseIP(ip *net.IP) {
-	ipam.AvailableIps = append(ipam.AvailableIps, ip)
+func (ipam *BitmapIPAM) ReleaseIP(ip *net.IPNet) error {
+	pos, err := util.GetIpOffset(ipam.Subnet, ip)
+	if err != nil {
+		return err
+	}
+	return ipam.Bitmap.Clear(uint64(pos))
 }

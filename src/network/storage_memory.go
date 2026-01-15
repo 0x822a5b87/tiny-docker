@@ -135,7 +135,7 @@ func (store *InMemoryIPAMStore) Update(networkId entity.NetworkId, ipam IPAM) er
 	return nil
 }
 
-func (store *InMemoryIPAMStore) Delete(networkId entity.NetworkId, ipam IPAM) error {
+func (store *InMemoryIPAMStore) Delete(networkId entity.NetworkId) error {
 	store.mutex.Lock()
 	defer store.mutex.Unlock()
 	delete(store.ipams, networkId)

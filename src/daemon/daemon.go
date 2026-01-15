@@ -6,10 +6,13 @@ import (
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/network"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
+
+var networks *network.Networks
 
 func StartDockerd(debug bool) error {
 	initContext()
@@ -74,6 +77,18 @@ func initContext() {
 	logrus.Infof("init dockerd uds pid file: {%s}", conf.RuntimeDockerdUdsPidFile.Get())
 	logrus.Infof("init dockerd log file: {%s}", conf.RuntimeDockerdLogFile.Get())
 	logrus.Infof("init dockerd container path: {%s}", conf.RuntimeDockerdContainerStatus.Get())
+
+	initNetwork()
+}
+
+func initNetwork() {
+	conf.LoadBasicCommand()
+	var err error
+	networks, err = network.NewNetworks()
+	if err != nil {
+		logrus.Errorf("error creating networks: %v", err)
+		panic(err)
+	}
 }
 
 func ensureFile(path string) {

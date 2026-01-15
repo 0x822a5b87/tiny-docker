@@ -66,6 +66,7 @@ func Environ() {
 
 	env = appendEnv(env, RuntimeNetworkPath, GlobalConfig.DockerdNetworkPath())
 	env = appendEnv(env, RuntimeEndpointPath, GlobalConfig.DockerdEndpointPath())
+	env = appendEnv(env, RuntimeIpamPath, GlobalConfig.DockerdIpamPath())
 
 	if GlobalConfig.Cmd.Detach {
 		env = appendEnv(env, DetachMode, "true")

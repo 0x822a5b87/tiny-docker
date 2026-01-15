@@ -19,6 +19,7 @@ var ContainerPath PathType = "container"
 var NetworksPath PathType = "networks"
 var NetworkPath PathType = "network"
 var EndpointPath PathType = "endpoint"
+var IPAMPath PathType = "IPAM"
 
 type Commands struct {
 	Id       entity.ContainerId
@@ -146,6 +147,10 @@ func (c Config) DockerdNetworkPath() string {
 
 func (c Config) DockerdEndpointPath() string {
 	return c.DockerdPath(NetworksPath, string(EndpointPath))
+}
+
+func (c Config) DockerdIpamPath() string {
+	return c.DockerdPath(NetworksPath, string(IPAMPath))
 }
 
 func (c Config) DockerdLogFile() string {

@@ -24,5 +24,5 @@ type EndpointStore interface {
 type IPAMStore interface {
 	Get(networkId entity.NetworkId) (IPAM, error)
 	Update(networkId entity.NetworkId, ipam IPAM) error
-	Delete(networkId entity.NetworkId, ipam IPAM) error
+	Delete(networkId entity.NetworkId) error
 }

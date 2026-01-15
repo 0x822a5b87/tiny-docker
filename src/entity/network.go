@@ -22,6 +22,6 @@ type Network struct {
 	Id      NetworkId   `json:"id"`
 	Name    string      `json:"name"`
 	Type    NetworkType `json:"type"`
-	Gateway net.IP      `json:"gateway"`
+	Gateway *net.IPNet  `json:"gateway"`
 	IPNet   *net.IPNet  `json:"ip_net"`
 }

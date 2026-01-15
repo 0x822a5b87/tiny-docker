@@ -115,3 +115,75 @@ func (store *FileNetworkStore) doGet(id entity.NetworkId) (*entity.Network, erro
 	}
 	return network, nil
 }
+
+func NewFileIPAMStore() (IPAMStore, error) {
+	store := &FileIPAMStore{
+		mutex:   sync.RWMutex{},
+		ipamMap: make(map[entity.NetworkId]IPAM),
+	}
+
+	ipamBasePath := conf.RuntimeIpamPath.Get()
+	if err := util.EnsureFilePathExist(ipamBasePath); err != nil {
+		return nil, err
+	}
+
+	filesInDir, err := util.ReadAllFilesInDir(ipamBasePath)
+	if err != nil {
+		logrus.Errorf("[NewFileIPAMStore]ReadAllFilesInDir error: %s", err)
+		return nil, err
+	}
+	for networkId, data := range filesInDir {
+		ipam := &BitmapIPAM{}
+		if err = json.Unmarshal(data, ipam); err != nil {
+			logrus.Errorf("[NewFileIPAMStore]error unmarshal ipam from file: %s", err)
+			continue
+		}
+		store.ipamMap[entity.NetworkId(networkId)] = ipam
+	}
+
+	return store, nil
+}
+
+type FileIPAMStore struct {
+	mutex   sync.RWMutex
+	ipamMap map[entity.NetworkId]IPAM
+}
+
+func (store *FileIPAMStore) Get(networkId entity.NetworkId) (IPAM, error) {
+	store.mutex.RLock()
+	defer store.mutex.RUnlock()
+	ipam, ok := store.ipamMap[networkId]
+	if !ok {
+		return nil, constant.ErrResourceNotFound
+	}
+	return ipam, nil
+}
+
+func (store *FileIPAMStore) Update(networkId entity.NetworkId, ipam IPAM) error {
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
+	data, err := json.Marshal(ipam)
+	if err != nil {
+		return err
+	}
+	if err = os.WriteFile(store.getIpamFile(networkId), data, 0644); err != nil {
+		return err
+	}
+	store.ipamMap[networkId] = ipam
+	return nil
+}
+
+func (store *FileIPAMStore) Delete(networkId entity.NetworkId) error {
+	store.mutex.Lock()
+	defer store.mutex.Unlock()
+	if err := os.Remove(store.getIpamFile(networkId)); err != nil {
+		return err
+	}
+	delete(store.ipamMap, networkId)
+	return nil
+}
+
+func (store *FileIPAMStore) getIpamFile(networkId entity.NetworkId) string {
+	networkBasePath := conf.RuntimeIpamPath.Get()
+	return filepath.Join(networkBasePath, string(networkId))
+}

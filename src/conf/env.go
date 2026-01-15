@@ -55,3 +55,4 @@ const RuntimeDockerdContainerLog EnvVariable = "tiny-docker-runtime-dockerd-cont
 
 const RuntimeNetworkPath EnvVariable = "tiny-docker-runtime-dockerd-network"
 const RuntimeEndpointPath EnvVariable = "tiny-docker-runtime-dockerd-endpoint"
+const RuntimeIpamPath EnvVariable = "tiny-docker-runtime-dockerd-ipam"

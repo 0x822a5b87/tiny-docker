@@ -26,10 +26,23 @@ func NewBitmap(size uint64) (*Bitmap, error) {
 		bitsLen += 1
 	}
 
-	return &Bitmap{
+	bitmap := &Bitmap{
 		Size: size,
 		Bits: make([]uint64, bitsLen),
-	}, nil
+	}
+
+	// network address, gateway, broadcast are now allowed to allocate
+	if err := bitmap.Set(0); err != nil {
+		return nil, err
+	}
+	if err := bitmap.Set(1); err != nil {
+		return nil, err
+	}
+	if err := bitmap.Set(bitmap.Size - 1); err != nil {
+		return nil, err
+	}
+
+	return bitmap, nil
 }
 
 func (b *Bitmap) Set(pos uint64) error {

@@ -6,6 +6,7 @@ import (
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/daemon"
+	"github.com/0x822a5b87/tiny-docker/src/entity"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -153,7 +154,11 @@ var stopCommand = cli.Command{
 	Usage: `Stop target container`,
 	Flags: []cli.Flag{},
 	Action: func(context *cli.Context) error {
-		containerIds := context.Args()
+		args := context.Args()
+		containerIds := make([]entity.ContainerId, 0)
+		for _, arg := range args {
+			containerIds = append(containerIds, entity.ContainerId(arg))
+		}
 		return daemon.SendStopRequest(conf.StopCommand{ContainerIds: containerIds})
 	},
 }
@@ -163,7 +168,11 @@ var logsCommand = cli.Command{
 	Usage: `Print logs of target container`,
 	Flags: []cli.Flag{},
 	Action: func(context *cli.Context) error {
-		containerIds := context.Args()
+		args := context.Args()
+		containerIds := make([]entity.ContainerId, 0)
+		for _, arg := range args {
+			containerIds = append(containerIds, entity.ContainerId(arg))
+		}
 		if len(containerIds) != 1 {
 			return constant.ErrMalformedLogsArgs
 		}

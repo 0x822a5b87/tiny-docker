@@ -286,9 +286,9 @@ func setPty(cmd *exec.Cmd) error {
 	return nil
 }
 
-func getContainerLogFilePath(id string) string {
+func getContainerLogFilePath(id entity.ContainerId) string {
 	fileRoot := conf.RuntimeDockerdContainerLog.Get()
-	return filepath.Join(fileRoot, id, constant.ContainerLogFile)
+	return filepath.Join(fileRoot, string(id), constant.ContainerLogFile)
 }
 
 func nullFileWithPanic() *os.File {

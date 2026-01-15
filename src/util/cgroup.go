@@ -8,9 +8,10 @@ import (
 	"strings"
 
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/entity"
 )
 
-func GenContainerCgroupPath(id string) string {
+func GenContainerCgroupPath(id entity.ContainerId) string {
 	cgroupBasePath := constant.CgroupBasePath
 	cgroupServicePath := filepath.Join(cgroupBasePath, constant.CgroupServiceName)
 	if err := EnsureFilePathExist(cgroupServicePath); err != nil {

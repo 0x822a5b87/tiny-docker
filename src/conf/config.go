@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/entity"
 )
 
 type PathType string
@@ -20,7 +21,7 @@ var NetworkPath PathType = "network"
 var EndpointPath PathType = "endpoint"
 
 type Commands struct {
-	Id       string
+	Id       entity.ContainerId
 	Tty      bool
 	Detach   bool
 	Image    string
@@ -44,7 +45,7 @@ type RunCommands struct {
 func (r RunCommands) IntoCommands() Commands {
 	fullID, _ := GenContainerID()
 	return Commands{
-		Id:      fullID,
+		Id:      entity.ContainerId(fullID),
 		Tty:     r.Tty,
 		Detach:  r.Detach,
 		Image:   r.Image,
@@ -57,7 +58,7 @@ func (r RunCommands) IntoCommands() Commands {
 
 type ExecCommand struct {
 	Interactive bool
-	Id          string
+	Id          entity.ContainerId
 	Args        []string
 }
 
@@ -80,11 +81,11 @@ type PsCommand struct {
 }
 
 type StopCommand struct {
-	ContainerIds []string
+	ContainerIds []entity.ContainerId
 }
 
 type LogsCommand struct {
-	ContainerId string
+	ContainerId entity.ContainerId
 }
 
 type CgroupConfig struct {
@@ -120,15 +121,15 @@ func (c Config) ReadPath() string {
 }
 
 func (c Config) WritePath() string {
-	return c.buildIndPath(ImagePath, "write", c.Cmd.Id)
+	return c.buildIndPath(ImagePath, "write", string(c.Cmd.Id))
 }
 
 func (c Config) WorkPath() string {
-	return c.buildIndPath(ImagePath, "work", c.Cmd.Id)
+	return c.buildIndPath(ImagePath, "work", string(c.Cmd.Id))
 }
 
 func (c Config) MergePath() string {
-	return c.buildIndPath(ImagePath, "merge", c.Cmd.Id)
+	return c.buildIndPath(ImagePath, "merge", string(c.Cmd.Id))
 }
 
 func (c Config) DockerdUdsFile() string {

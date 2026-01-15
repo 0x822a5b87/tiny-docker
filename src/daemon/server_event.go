@@ -44,7 +44,7 @@ func stopContainers(containers []entity.Container) error {
 	return err
 }
 
-func stopContainer(id string) error {
+func stopContainer(id entity.ContainerId) error {
 	mu.Lock()
 	defer mu.Unlock()
 	p := getContainerStatusFilePath(id)
@@ -77,7 +77,7 @@ func stopContainer(id string) error {
 	return nil
 }
 
-func logs(containerId string) (string, error) {
+func logs(containerId entity.ContainerId) (string, error) {
 	logFile := getContainerLogFilePath(containerId)
 	data, err := os.ReadFile(logFile)
 	if err != nil {
@@ -151,9 +151,9 @@ func ps(command conf.PsCommand) ([]entity.Container, error) {
 	return targetContainers, nil
 }
 
-func getContainerStatusFilePath(id string) string {
+func getContainerStatusFilePath(id entity.ContainerId) string {
 	fileRoot := conf.RuntimeDockerdContainerStatus.Get()
-	return filepath.Join(fileRoot, id)
+	return filepath.Join(fileRoot, string(id))
 }
 
 func readContainerState(p string) (*entity.Container, error) {

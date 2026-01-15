@@ -5,6 +5,7 @@ import (
 
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
+	"github.com/0x822a5b87/tiny-docker/src/entity"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -22,7 +23,7 @@ func GetExecArgs(ctx *cli.Context) (*conf.ExecCommand, error) {
 		return nil, fmt.Errorf("usage: mini-docker exec [OPTIONS] CONTAINER COMMAND [ARG...]")
 	}
 
-	command.Id = args[0]
+	command.Id = entity.ContainerId(args[0])
 	command.Args = args[1:]
 	return command, nil
 }

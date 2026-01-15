@@ -166,8 +166,8 @@ func CheckIPAllocated(targetIP string) (bool, error) {
 				continue
 			}
 			if addr.IP.Equal(targetIPv4) {
-				return true, fmt.Errorf("IP %s is allocated to device: %s (state: %s)",
-					targetIPv4.String(), link.Attrs().Name, getLinkState(link))
+				logrus.Errorf("IP %s is allocated to device: %s (state: %s)", targetIPv4.String(), link.Attrs().Name, getLinkState(link))
+				return true, constant.ErrInvalidIp
 			}
 		}
 	}
@@ -197,7 +197,8 @@ func CheckSubnetGatewayAvailable(subnet *net.IPNet) (string, error) {
 		return "", fmt.Errorf("check gateway IP failed: %w", err)
 	}
 	if used {
-		return "", fmt.Errorf("gateway IP %s is already used by other device", gatewayIpStr)
+		logrus.Errorf("gateway IP %s is already used by other device", gatewayIpStr)
+		return "", constant.ErrInvalidGateway
 	}
 
 	return gatewayIpStr, nil

@@ -1,6 +1,7 @@
 package network
 
 import (
+	"errors"
 	"net"
 	"sync"
 
@@ -42,6 +43,11 @@ type Networks struct {
 
 func (n *Networks) CreateNetwork(networkType entity.NetworkType, networkName string) error {
 	_, err := n.networkStore.GetByName(networkName)
+	if err == nil {
+		logrus.Errorf("network with name %s already exists", networkName)
+		return constant.ErrResourceExists
+	}
+
 	if IsResourceNotFound(err) {
 		n.Lock()
 		defer n.Unlock()
@@ -58,6 +64,10 @@ func (n *Networks) CreateNetwork(networkType entity.NetworkType, networkName str
 	}
 
 	return err
+}
+
+func (n *Networks) GetNetworkByName(networkName string) (*entity.Network, error) {
+	return n.networkStore.GetByName(networkName)
 }
 
 func (n *Networks) DeleteNetwork(id entity.NetworkId) error {
@@ -97,9 +107,10 @@ func (n *Networks) createNonExitedNetwork(networkType entity.NetworkType, networ
 			return nil, err
 		}
 		network, err := n.networkDriver.Create(networkName, subnet)
-		if err == nil {
-			return network, nil
+		if n.isIPOrIPNetBeingUsedErr(err) {
+			continue
 		}
+		return network, err
 	}
 }
 
@@ -119,4 +130,8 @@ func (n *Networks) getAvailableIpNet() (*net.IPNet, error) {
 		return nil, constant.ErrNetworkVersion
 	}
 	return util.GetNthSubnet(subnet, subnetPos)
+}
+
+func (n *Networks) isIPOrIPNetBeingUsedErr(err error) bool {
+	return errors.Is(err, constant.ErrInvalidGateway) || errors.Is(err, constant.ErrInvalidIp)
 }

@@ -86,3 +86,45 @@ func handleWaitContainer(request handler.Request) (handler.Response, error) {
 	go wait(waitReq)
 	return handler.SuccessResponse("{}")
 }
+
+func handleNetworkCreate(request handler.Request) (handler.Response, error) {
+	network, err := handler.ParamsFromRequest[entity.Network](&request)
+	if err != nil {
+		logrus.Errorf("error parse network create request: %s", err.Error())
+		return handler.ErrorMessageResponse("error parse network create request", constant.ErrMalformedUdsReq)
+	}
+
+	n, err := NetworkCreate(network.Name)
+	if err != nil {
+		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
+	}
+	return handler.SuccessResponse(n)
+}
+
+func handleNetworkRm(request handler.Request) (handler.Response, error) {
+	network, err := handler.ParamsFromRequest[entity.Network](&request)
+	if err != nil {
+		logrus.Errorf("error parse network rm request: %s", err.Error())
+		return handler.ErrorMessageResponse("error parse network rm request", constant.ErrMalformedUdsReq)
+	}
+
+	n, err := NetworkRm(network.Name)
+	if err != nil {
+		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
+	}
+	return handler.SuccessResponse(n)
+}
+
+func handleNetworkInspect(request handler.Request) (handler.Response, error) {
+	network, err := handler.ParamsFromRequest[entity.Network](&request)
+	if err != nil {
+		logrus.Errorf("error parse network inspect request: %s", err.Error())
+		return handler.ErrorMessageResponse("error parse network inspect request", constant.ErrMalformedUdsReq)
+	}
+
+	n, err := NetworkInspect(network.Name)
+	if err != nil {
+		return handler.ErrorResponse(err, constant.ErrMalformedUdsRsp)
+	}
+	return handler.SuccessResponse(n)
+}

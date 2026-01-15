@@ -28,15 +28,16 @@ func NewFileNetworkStore() (NetworkStore, error) {
 		logrus.Errorf("ReadAllFilesInDir error: %s", err)
 		return nil, err
 	}
-	for name, data := range filesInDir {
+	for _, data := range filesInDir {
 		network := &entity.Network{}
 		if err = json.Unmarshal(data, network); err != nil {
 			logrus.Errorf("error unmarshal network from file: %s", err)
 			continue
 		}
-		store.names[name] = network.Id
+		store.names[network.Name] = network.Id
 		store.networks[network.Id] = network
 	}
+
 	return store, nil
 }
 

@@ -45,4 +45,6 @@ var (
 	ErrNetworkVersion               = Err{ErrorCode: 100020, ErrorText: "only IPv4 is supported"}
 	ErrResourceNotExists            = Err{ErrorCode: 100021, ErrorText: "resource not exists"}
 	ErrDeviceIsBusy                 = Err{ErrorCode: 100022, ErrorText: "device is busy"}
+	ErrInvalidGateway               = Err{ErrorCode: 100023, ErrorText: "gateway IP is already used by other device"}
+	ErrInvalidIp                    = Err{ErrorCode: 100024, ErrorText: "invalid IP"}
 )

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/0x822a5b87/tiny-docker/src/conf"
 	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/daemon"
@@ -185,4 +187,122 @@ var execCommand = cli.Command{
 		}
 		return daemon.Exec(command)
 	},
+}
+
+var networkCommand = cli.Command{
+	Name:  constant.Network.String(),
+	Usage: "Operate networks: create/connect/disconnect/rm",
+	Subcommands: cli.Commands{
+		newNetworkCreateCommand(),
+		newNetworkConnectCommand(),
+		newNetworkRmCommand(),
+		newNetworkInspectCommand(),
+	},
+	Action: func(c *cli.Context) error {
+		return cli.ShowSubcommandHelp(c)
+	},
+}
+
+func newNetworkCreateCommand() cli.Command {
+	return cli.Command{
+		Name:  constant.NetworkCreate.String(),
+		Usage: "Create a network",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "subnet",
+				Usage:    "Specify subnet for the network (e.g. 172.18.0.0/16)",
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:  "driver",
+				Usage: "Specify network driver (only bridge supported)",
+				Value: "bridge",
+			},
+			&cli.StringFlag{
+				Name:     "name",
+				Usage:    "Specify network name",
+				Required: true,
+			},
+		},
+		Action: func(c *cli.Context) error {
+			networkName := c.String("name")
+			if err := daemon.SendNetworkCreate(networkName); err != nil {
+				return fmt.Errorf("failed to create network: %w", err)
+			}
+			fmt.Printf("Network %s created successfully\n", networkName)
+			return nil
+		},
+	}
+}
+
+func newNetworkConnectCommand() cli.Command {
+	return cli.Command{
+		Name:  constant.NetworkConnect.String(),
+		Usage: "Connect a container to a network",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "network",
+				Usage:    "Network name",
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:     "container",
+				Usage:    "Container ID/name",
+				Required: true,
+			},
+		},
+		Action: func(c *cli.Context) error {
+			//networkName := c.String("network")
+			//containerID := c.String("container")
+			//
+			//if err := daemon.ConnectNetwork(networkName, containerID); err != nil {
+			//	return fmt.Errorf("failed to connect network: %w", err)
+			//}
+			//fmt.Printf("Container %s connected to network %s\n", containerID, networkName)
+			return nil
+		},
+	}
+}
+
+func newNetworkRmCommand() cli.Command {
+	return cli.Command{
+		Name:  constant.NetworkRm.String(),
+		Usage: "Remove a network",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "name",
+				Usage:    "Network name",
+				Required: true,
+			},
+		},
+		Action: func(c *cli.Context) error {
+			networkName := c.String("name")
+			if err := daemon.SendNetworkRm(networkName); err != nil {
+				return fmt.Errorf("failed to remove network: %w", err)
+			}
+			fmt.Printf("Network %s removed successfully\n", networkName)
+			return nil
+		},
+	}
+}
+
+func newNetworkInspectCommand() cli.Command {
+	return cli.Command{
+		Name:  constant.NetworkInspect.String(),
+		Usage: "Inspect a network",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "name",
+				Usage:    "Network name",
+				Required: true,
+			},
+		},
+		Action: func(c *cli.Context) error {
+			networkName := c.String("name")
+			if err := daemon.SendNetworkInspect(networkName); err != nil {
+				return fmt.Errorf("failed to remove network: %w", err)
+			}
+			return nil
+		},
+	}
 }

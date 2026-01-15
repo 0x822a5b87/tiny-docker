@@ -107,6 +107,60 @@ func SendLogRequest(command conf.LogsCommand) error {
 	return nil
 }
 
+func SendNetworkCreate(name string) error {
+	conf.LoadBasicCommand()
+	rsp, err := sendRequest[entity.Network](constant.NetworkCreate, entity.Network{Name: name})
+	if err != nil {
+		return err
+	}
+	if rsp.Code != constant.UdsStatusOk {
+		return fmt.Errorf(rsp.Msg)
+	}
+
+	network, err := handler.DataFromResponse[string](*rsp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(network)
+	return nil
+}
+
+func SendNetworkRm(name string) error {
+	conf.LoadBasicCommand()
+	rsp, err := sendRequest[entity.Network](constant.NetworkRm, entity.Network{Name: name})
+	if err != nil {
+		return err
+	}
+	if rsp.Code != constant.UdsStatusOk {
+		return fmt.Errorf(rsp.Msg)
+	}
+
+	network, err := handler.DataFromResponse[string](*rsp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(network)
+	return nil
+}
+
+func SendNetworkInspect(name string) error {
+	conf.LoadBasicCommand()
+	rsp, err := sendRequest[entity.Network](constant.NetworkInspect, entity.Network{Name: name})
+	if err != nil {
+		return err
+	}
+	if rsp.Code != constant.UdsStatusOk {
+		return fmt.Errorf(rsp.Msg)
+	}
+
+	network, err := handler.DataFromResponse[string](*rsp)
+	if err != nil {
+		return err
+	}
+	fmt.Println(network)
+	return nil
+}
+
 func SendWaitRequest(request entity.WaitRequest) error {
 	_, err := sendRequest(constant.Wait, request)
 	return err

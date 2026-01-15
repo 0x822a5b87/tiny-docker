@@ -39,7 +39,7 @@ func EnsureOpenFilePath(path string) (*os.File, error) {
 func EnsureFileExists(path string) error {
 	logDir := filepath.Dir(path)
 	if err := os.MkdirAll(logDir, 0755); err != nil {
-		logrus.Errorf("Failed to create path directory: %v", err) // 改为 Errorf，避免直接终止进程
+		logrus.Errorf("Failed to create path directory, err : %s, path : %s", err, path)
 		return err
 	}
 
@@ -66,7 +66,7 @@ func EnsureFileExists(path string) error {
 
 func EnsureFilePathExist(path string) error {
 	if err := os.MkdirAll(path, 0755); err != nil {
-		logrus.Fatal("Failed to create path directory: ", err)
+		logrus.Errorf("Failed to create path directory, err : %s, path : %s", err, path)
 		return err
 	}
 	return nil

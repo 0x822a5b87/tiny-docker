@@ -122,8 +122,7 @@ func handleClient(conn *net.UnixConn) {
 func handleRsp(conn *net.UnixConn, req Request) {
 	rsp, err := handleRequest(req)
 	if err != nil {
-		logrus.Errorf("handle request error: %s\n", err.Error())
-		return
+		logrus.Errorf("handle request error: %s, rsp : %v\n", err.Error(), rsp)
 	}
 	if err = sendResponse(conn, rsp); err != nil {
 		logrus.Error("error send response: %s\n", err.Error())

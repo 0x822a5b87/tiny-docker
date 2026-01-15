@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/bits"
 
+	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 )
 
@@ -15,7 +16,7 @@ type Bitmap struct {
 
 func NewBitmap(size uint64) (*Bitmap, error) {
 	if size == 0 {
-		return nil, ErrInvalidSize
+		return nil, constant.ErrInvalidSize
 	}
 
 	size = util.NextPowerOfTwo(size)
@@ -33,7 +34,7 @@ func NewBitmap(size uint64) (*Bitmap, error) {
 
 func (b *Bitmap) Set(pos uint64) error {
 	if pos >= b.Size {
-		return ErrInvalidPos
+		return constant.ErrInvalidPos
 	}
 
 	idx := pos / 64
@@ -44,7 +45,7 @@ func (b *Bitmap) Set(pos uint64) error {
 
 func (b *Bitmap) Clear(pos uint64) error {
 	if pos >= b.Size {
-		return ErrInvalidPos
+		return constant.ErrInvalidPos
 	}
 
 	idx := pos / 64
@@ -100,7 +101,7 @@ func NewIPNetBitmap(subnetSize, ipSize uint64) (*IPNetBitmap, error) {
 func (i *IPNetBitmap) AllocateSubnet() (*Bitmap, uint64, error) {
 	subnetPos := i.SubnetBitmap.FindFirstUnset()
 	if subnetPos == -1 {
-		return nil, 0, ErrOutOfRange
+		return nil, 0, constant.ErrOutOfRange
 	}
 	subnetPosUint := uint64(subnetPos)
 
@@ -121,7 +122,7 @@ func (i *IPNetBitmap) AllocateSubnet() (*Bitmap, uint64, error) {
 
 func (i *IPNetBitmap) ReleaseSubnet(subnetPos uint64) error {
 	if !i.SubnetBitmap.IsSet(subnetPos) {
-		return ErrInvalidPos
+		return constant.ErrInvalidPos
 	}
 
 	if err := i.SubnetBitmap.Clear(subnetPos); err != nil {
@@ -137,7 +138,7 @@ func (i *IPNetBitmap) ReleaseSubnet(subnetPos uint64) error {
 
 func (i *IPNetBitmap) AllocateIPInSubnet(subnetPos uint64) (uint64, error) {
 	if !i.SubnetBitmap.IsSet(subnetPos) {
-		return 0, ErrInvalidPos
+		return 0, constant.ErrInvalidPos
 	}
 
 	ipBitmap, exists := i.SubnetIPMaps[subnetPos]
@@ -147,7 +148,7 @@ func (i *IPNetBitmap) AllocateIPInSubnet(subnetPos uint64) (uint64, error) {
 
 	ipPos := ipBitmap.FindFirstUnset()
 	if ipPos == -1 {
-		return 0, ErrOutOfRange
+		return 0, constant.ErrOutOfRange
 	}
 	ipPosUint := uint64(ipPos)
 

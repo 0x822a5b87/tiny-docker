@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/0x822a5b87/tiny-docker/src/constant"
 	"github.com/0x822a5b87/tiny-docker/src/util"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNewBitmap(t *testing.T) {
 	bitmap, err := NewBitmap(0)
-	assert.ErrorIs(t, err, ErrInvalidSize)
+	assert.ErrorIs(t, err, constant.ErrInvalidSize)
 	assert.Nil(t, bitmap)
 
 	bitmap, err = NewBitmap(14)
@@ -38,7 +39,7 @@ func TestBitmap_Set_Clear_IsSet(t *testing.T) {
 	assert.True(t, bitmap.IsSet(5))
 
 	err = bitmap.Set(20)
-	assert.ErrorIs(t, err, ErrInvalidPos)
+	assert.ErrorIs(t, err, constant.ErrInvalidPos)
 	assert.False(t, bitmap.IsSet(20))
 
 	err = bitmap.Clear(5)
@@ -46,7 +47,7 @@ func TestBitmap_Set_Clear_IsSet(t *testing.T) {
 	assert.False(t, bitmap.IsSet(5))
 
 	err = bitmap.Clear(20)
-	assert.ErrorIs(t, err, ErrInvalidPos)
+	assert.ErrorIs(t, err, constant.ErrInvalidPos)
 }
 
 func TestBitmap_FindFirstUnset(t *testing.T) {
@@ -97,7 +98,7 @@ func TestIPNetBitmap_AllocateSubnet(t *testing.T) {
 		assert.NoError(t, err)
 	}
 	_, _, err = ipNetBitmap.AllocateSubnet()
-	assert.ErrorIs(t, err, ErrOutOfRange)
+	assert.ErrorIs(t, err, constant.ErrOutOfRange)
 }
 
 func TestIPNetBitmap_ReleaseSubnet(t *testing.T) {
@@ -117,7 +118,7 @@ func TestIPNetBitmap_ReleaseSubnet(t *testing.T) {
 	assert.Equal(t, 0, pos)
 
 	err = ipNetBitmap.ReleaseSubnet(20)
-	assert.ErrorIs(t, err, ErrInvalidPos)
+	assert.ErrorIs(t, err, constant.ErrInvalidPos)
 }
 
 func TestIPNetBitmap_AllocateIPInSubnet(t *testing.T) {
@@ -139,7 +140,7 @@ func TestIPNetBitmap_AllocateIPInSubnet(t *testing.T) {
 	err = ipNetBitmap.ReleaseSubnet(subnetPos)
 	assert.NoError(t, err)
 	_, err = ipNetBitmap.AllocateIPInSubnet(subnetPos)
-	assert.ErrorIs(t, err, ErrInvalidPos)
+	assert.ErrorIs(t, err, constant.ErrInvalidPos)
 
 	_ = ipNetBitmap.SubnetIPMaps[subnetPos]
 	_, _, err = ipNetBitmap.AllocateSubnet()
@@ -149,7 +150,7 @@ func TestIPNetBitmap_AllocateIPInSubnet(t *testing.T) {
 		assert.NoError(t, err)
 	}
 	_, err = ipNetBitmap.AllocateIPInSubnet(subnetPos)
-	assert.ErrorIs(t, err, ErrOutOfRange)
+	assert.ErrorIs(t, err, constant.ErrOutOfRange)
 }
 
 func TestIPNetBitmap_Integration(t *testing.T) {

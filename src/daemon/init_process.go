@@ -14,6 +14,7 @@ import (
 func RunDaemon() error {
 	logrus.Info("Starting daemon process")
 	_ = setupDetachMode()
+	initContext()
 	return handler.CreateUdsServer()
 }
 

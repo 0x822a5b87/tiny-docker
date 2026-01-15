@@ -89,6 +89,7 @@ func initNetwork() {
 		logrus.Errorf("error creating networks: %v", err)
 		panic(err)
 	}
+	logrus.Infof("init network successfully.")
 }
 
 func ensureFile(path string) {

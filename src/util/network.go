@@ -50,12 +50,19 @@ func SetBridgeIP(bridgeName, ipWithCIDR string) error {
 	if err != nil {
 		return err
 	}
+
+	gatewayIp, err := GetGatewayIp(ipNet)
+	if err != nil {
+		return err
+	}
 	ipAddr := &netlink.Addr{
-		IPNet: ipNet,
-		Peer:  nil,
+		IPNet: &net.IPNet{
+			IP:   gatewayIp,
+			Mask: ipNet.Mask,
+		},
+		Peer: nil,
 	}
 
-	_ = netlink.AddrDel(bridge, ipAddr)
 	return netlink.AddrAdd(bridge, ipAddr)
 }
 
@@ -116,13 +123,7 @@ func GetNthSubnet(subnet *net.IPNet, nth uint64) (*net.IPNet, error) {
 		return nil, errors.New("invalid parent subnet mask length")
 	}
 
-	subnetSize := uint64(1) << (32 - uint64(parentMaskLen))
-	parentTotalIP := uint64(1) << (32 - uint64(parentMaskLen))
-	totalSubnets := parentTotalIP / subnetSize
-	if nth >= totalSubnets {
-		return nil, fmt.Errorf("nth exceeds total available subnets: nth = {%d}, total = {%d}", nth, totalSubnets)
-	}
-
+	subnetSize := uint64(1) << uint64(parentMaskLen)
 	parentInt := ipToUint32(parentIP)
 	offsetInt := parentInt + nth*subnetSize
 	offsetIP := uint32ToIP(offsetInt)
@@ -133,11 +134,93 @@ func GetNthSubnet(subnet *net.IPNet, nth uint64) (*net.IPNet, error) {
 		Mask: targetMask,
 	}
 
-	if !subnet.Contains(targetSubnet.IP) {
-		return nil, errors.New("offset subnet is out of parent subnet range")
+	return targetSubnet, nil
+}
+
+func CheckIPAllocated(targetIP string) (bool, error) {
+	ipStr, _, err := net.ParseCIDR(targetIP)
+	if err != nil {
+		ipStr = net.ParseIP(targetIP)
+		if ipStr == nil {
+			return false, fmt.Errorf("invalid IP/CIDR format: %s, err: %w", targetIP, err)
+		}
+	}
+	targetIPv4 := ipStr.To4()
+	if targetIPv4 == nil {
+		return false, errors.New("only support IPv4 address")
 	}
 
-	return targetSubnet, nil
+	links, err := netlink.LinkList()
+	if err != nil {
+		return false, fmt.Errorf("netlink list links failed: %w", err)
+	}
+
+	for _, link := range links {
+		addrs, err := netlink.AddrList(link, netlink.FAMILY_V4)
+		if err != nil {
+			continue
+		}
+
+		for _, addr := range addrs {
+			if addr.IP.To4() == nil {
+				continue
+			}
+			if addr.IP.Equal(targetIPv4) {
+				return true, fmt.Errorf("IP %s is allocated to device: %s (state: %s)",
+					targetIPv4.String(), link.Attrs().Name, getLinkState(link))
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func CheckSubnetGatewayAvailable(subnet *net.IPNet) (string, error) {
+	networkIP := subnet.IP.To4()
+	if networkIP == nil {
+		return "", constant.ErrNetworkVersion
+	}
+
+	gatewayIp, err := GetGatewayIp(subnet)
+	if err != nil {
+		return "", err
+	}
+
+	gatewaySubnet := &net.IPNet{
+		IP:   gatewayIp,
+		Mask: subnet.Mask,
+	}
+	gatewayIpStr := gatewaySubnet.String()
+
+	used, err := CheckIPAllocated(gatewayIpStr)
+	if err != nil {
+		return "", fmt.Errorf("check gateway IP failed: %w", err)
+	}
+	if used {
+		return "", fmt.Errorf("gateway IP %s is already used by other device", gatewayIpStr)
+	}
+
+	return gatewayIpStr, nil
+}
+
+func getLinkState(link netlink.Link) string {
+	if link.Attrs().Flags&net.FlagUp != 0 {
+		return "UP"
+	}
+	return "DOWN"
+}
+
+func GetGatewayIp(ipNet *net.IPNet) ([]byte, error) {
+	networkIP := ipNet.IP.To4()
+	if networkIP == nil {
+		return nil, constant.ErrNetworkVersion
+	}
+
+	gatewayIP := make(net.IP, len(networkIP))
+	copy(gatewayIP, networkIP)
+	gatewayIP[3] += 1
+
+	return gatewayIP, nil
 }
 
 func ipToUint32(ip net.IP) uint64 {

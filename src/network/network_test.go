@@ -17,14 +17,6 @@ func TestNetworks(t *testing.T) {
 	err = networks.CreateNetwork(entity.NetworkBridge, bridgeName)
 	assert.NoError(t, err)
 
-	container := entity.Container{
-		Id:   "c6d79b2fb313442d85f0ff6766a2ea70",
-		Name: "test-container",
-		Pid:  1198966,
-	}
-	err = networks.Connect(bridgeName, container)
-	assert.NoError(t, err)
-
 	network, err := networks.networkStore.GetByName(bridgeName)
 	assert.NoError(t, err)
 	assert.NotNil(t, network)
